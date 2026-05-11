@@ -75,8 +75,8 @@ class WebCrawler:
         """
         parse hmtl content for:\n
         - star count
-        - defamation removal notice
-        returns metada.
+        - defamation removal notice\n
+        ``returns`` metada
         """
         # collect stars count
         stars = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
