@@ -53,8 +53,7 @@ class WebCrawler:
 
     def search(self, query: str):
         """
-        Enter search ``query`` and navigate to review tab.\n
-        - returns hmtl dump
+        Enter search ``query`` and navigate to review tab.
         """
         try:
             search = self.page.locator('input[name="q"]')
@@ -72,11 +71,12 @@ class WebCrawler:
             print("Timeout while trying to navigate to reviews tab.")
         time.sleep(random.randrange(10, 40, 5)*0.1) # insert random delay
 
-    def get_star_metadata(self):
+    def get_star_metadata(self) -> dict:
         """
         parse hmtl content for:\n
         - star count
         - defamation removal notice
+        returns metada.
         """
         # collect stars count
         stars = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
