@@ -51,7 +51,7 @@ class WebCrawler:
             print("Timeout while trying to skip cookie banner.")
         time.sleep(random.randrange(10, 40, 5)*0.1) # insert random delay
 
-    def search(self, query: str) -> str:
+    def search(self, query: str):
         """
         Enter search ``query`` and navigate to review tab.\n
         - returns hmtl dump
