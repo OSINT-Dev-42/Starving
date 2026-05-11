@@ -1,0 +1,156 @@
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+import time
+import re
+import random
+import pathlib as path
+from datetime import datetime
+import pandas as pd
+
+PATH = path.Path()
+
+RAW_PATH = PATH / "data" / "raw"
+
+class WebCrawler:
+    # ----------------constants ----------------
+    __BASE_URL = r"https://www.google.com/maps?hl=en"
+    # --------------------------------------------
+
+    def __init__(self):
+        """
+        Creates chromium ``browser`` with *persistent* ``context`` and ``page`` tab.
+        Note that browsers do not allow launching multiple instances with the same User Data Directory.\n
+            - !simultaneous WebCrawler instances are not supported
+        """
+        # context configuration
+        config = {
+            "accept_downloads": False, # do not download stuff
+            "locale": "en-US", # emulate us english language settings
+            "screen": {"width": 1920, "height": 1080}, # emulate full hd screen
+            "viewport": {"width": 1920, "height": 1080}, # emulate full hd viewport
+            "headless": False, # set true to not show browser window (invisible); set false to show browser window (visible)
+            "args":  [
+                "--disable-blink-features=AutomationControlled" # navigator.webdriver = false
+            ]
+        }
+        # setup browser
+        self.pw = sync_playwright().start()
+        self.browser = self.pw.chromium
+        self.context = self.browser.launch_persistent_context("",**config)
+        self.page = self.context.new_page()
+
+    def visit_maps(self): 
+        """
+        Visit https://www.google.com/maps?hl=en and consent to any cookie banners.
+        """
+        self.page.goto(self.__BASE_URL) # visit english website
+        time.sleep(random.randrange(10, 20, 5)*0.1)
+        try:
+            button = self.page.get_by_role("button", name="Accept all") # search for accept all button
+            button.click(timeout=1000)
+        except PlaywrightTimeoutError:
+            print("Timeout while trying to skip cookie banner.")
+        time.sleep(random.randrange(10, 40, 5)*0.1) # insert random delay
+
+    def search(self, query: str) -> str:
+        """
+        Enter search ``query`` and navigate to review tab.\n
+        - returns hmtl dump
+        """
+        try:
+            search = self.page.locator('input[name="q"]')
+            search.fill(query) # input search query
+            search.press("Enter")
+        except PlaywrightTimeoutError:
+            print("Timeout while trying to find input field.")
+        
+        time.sleep(random.randrange(10, 40, 5)*0.1) # insert random delay
+        
+        try:
+            search = self.page.get_by_role("tab", name=re.compile(r"Reviews")) # select reviews tab
+            search.click(timeout=1000)
+        except PlaywrightTimeoutError:
+            print("Timeout while trying to navigate to reviews tab.")
+        time.sleep(random.randrange(10, 40, 5)*0.1) # insert random delay
+
+    def get_star_metadata(self):
+        """
+        parse hmtl content for:\n
+        - star count
+        - defamation removal notice
+        """
+        # collect stars count
+        stars = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
+        metadata = {'5 stars': None,
+                      '4 stars': None,
+                      '3 stars': None,
+                      '2 stars': None,
+                      '1 stars': None,
+                      'notice': None}
+        for rating in stars:
+            raw_rating = self.page.get_by_role("img", name=re.compile(f"{rating}, ([0-9]+)( reviews)")).first.get_attribute("aria-label")  # regex match rating count
+            metadata[rating] = [re.findall(r'-?\d*\.?\d+', raw_rating)[1]] # skip star num an extract only the review count
+        
+        # collect diffamation removal count
+        notices = ["One review removed due to a defamation complaint.",
+                   "Two to five reviews removed due to defamation complaints.",
+                   "Six to ten reviews removed due to defamation complaints.",
+                   "11 to 20 reviews removed due to defamation complaints.",
+                   "21 to 50 reviews removed due to defamation complaints.",
+                   "51 to 100 reviews removed due to defamation complaints.",
+                   "101 to 150 reviews removed due to defamation complaints.",
+                   "151 to 200 reviews removed due to defamation complaints.",
+                   "201 to 250 reviews removed due to defamation complaints.",
+                   "Over 250 reviews removed due to defamation complaints.",]
+
+        for notice in notices:
+            try:
+                metadata["notice"] = [self.page.get_by_text(notice).first.text_content(timeout=200)]
+            except PlaywrightTimeoutError:
+                continue
+        return metadata
+
+    def close(self):
+        """
+        Ends playwright session.
+        """
+        self.page.close()
+        self.context.close()
+
+
+def write_to_csv(data, name, path):
+    """
+    Write ``data`` to csv with a given path ``path / name``.
+    """
+    output = path / name
+    df = pd.DataFrame(data)
+    # check if file exists
+    if output.is_file():
+        df.to_csv(output , mode="a", index=False, header=False)
+    else:
+        df.to_csv(output, mode="w", index=False)
+
+
+
+if __name__ == "__main__":
+    result = {}
+    query = r"Bermuda Döner Kortumstraße 17, Bochum"
+
+    result['name'] = query
+    result["date"] = datetime.today().strftime(r'%Y-%m-%d')
+
+    crawl1 = WebCrawler() # init playwright
+
+    crawl1.visit_maps() # visit google maps
+    crawl1.search(query)
+
+    metadata = crawl1.get_star_metadata()
+    result.update(metadata)
+    # time.sleep(100)
+    crawl1.close()
+
+    print(result)
+    write_to_csv(result, "dump.csv", RAW_PATH)
+  
+
+
+    
