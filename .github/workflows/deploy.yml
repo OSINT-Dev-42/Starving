@@ -21,18 +21,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache-dependency-path: webapp/package-lock.json
           cache: npm
 
       - name: Install dependencies
+        working-directory: webapp
         run: |
-          cd webapp
           npm i
 
       - name: build
+        working-directory: webapp
         env:
           BASE_PATH: "/${{ github.event.repository.name }}"
         run: |
-          cd webapp
           npm run build
 
       - name: Upload Artifacts
