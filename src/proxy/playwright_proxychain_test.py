@@ -1,9 +1,8 @@
 import re
-
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 import time
 import httpx
-import json
+
 
 def setup_playwright(pw):
     # configuration
@@ -12,16 +11,16 @@ def setup_playwright(pw):
         "locale": "en-US", # emulate us english language settings
         "screen": {"width": 1920, "height": 1080}, # emulate full hd screen
         "viewport": {"width": 1920, "height": 1080}, # emulate full hd viewport
-        "headless": True, # set true to not show browser window (invisible); set false to show browser window (visible)
+        "headless": False, # set true to not show browser window (invisible); set false to show browser window (visible)
         # TODO: set navigator.webdriver to false to bypass bot detection
         "args":  [
-            "--disable-blink-features=AutomationControlled", # navigator.webdriver = false
+            # "--disable-blink-features=AutomationControlled", # navigator.webdriver = false
             "--proxy-server"
         ],
-        "proxy" : {"server": "socks5h://127.0.0.1:9050"}
+        "proxy" : {"server": "socks5://127.0.0.1:9050"}
     }
     # browser and context
-    browser = pw.chromium
+    browser = pw.firefox
     context = browser.launch_persistent_context("", **config)
     # create page
     page = context.new_page()
