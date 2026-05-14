@@ -29,12 +29,14 @@ class WebCrawler:
             "viewport": {"width": 1920, "height": 1080}, # emulate full hd viewport
             "headless": False, # set true to not show browser window (invisible); set false to show browser window (visible)
             "args":  [
-                "--disable-blink-features=AutomationControlled" # navigator.webdriver = false
-            ]
+                # "--disable-blink-features=AutomationControlled" # navigator.webdriver = false
+                "--proxy-server"
+            ],
+        "proxy" : {"server": "socks5://127.0.0.1:9050"}
         }
         # setup browser
         self.pw = sync_playwright().start()
-        self.browser = self.pw.chromium
+        self.browser = self.pw.firefox
         self.context = self.browser.launch_persistent_context("",**config)
         self.page = self.context.new_page()
 
