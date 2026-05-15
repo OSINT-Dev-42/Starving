@@ -27,7 +27,7 @@ class WebCrawler:
             "locale": "en-US", # emulate us english language settings
             "screen": {"width": 1920, "height": 1080}, # emulate full hd screen
             "viewport": {"width": 1920, "height": 1080}, # emulate full hd viewport
-            "headless": False, # set true to not show browser window (invisible); set false to show browser window (visible)
+            "headless": True, # set true to not show browser window (invisible); set false to show browser window (visible)
             "args":  [
                 # "--disable-blink-features=AutomationControlled" # navigator.webdriver = false
                 "--proxy-server"
