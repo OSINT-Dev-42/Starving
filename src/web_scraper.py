@@ -31,7 +31,7 @@ class WebCrawler:
 
     def visit_maps(self): 
         """
-        Visit https://www.google.com/maps?hl=en and consent to any cookie banners.
+        Visit https://www.google.com/maps?hl=en and reject any cookie banners.
         """
         self.page.goto(self.__BASE_URL) # visit english website
         time.sleep(random.randrange(10, 20, 5)*0.1)
