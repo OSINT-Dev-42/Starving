@@ -19,23 +19,10 @@ class WebCrawler:
 
     def __init__(self):
         """
-        Creates chromium ``browser`` with *persistent* ``context`` and ``page`` tab.
+        Creates chromium ``browser`` with ``context`` and ``page`` tab.
         Note that browsers do not allow launching multiple instances with the same User Data Directory.\n
             - !simultaneous WebCrawler instances are not supported
         """
-        # context configuration
-        # config = {
-        #     "accept_downloads": False, # do not download stuff
-        #     "locale": "en-US", # emulate us english language settings
-        #     "screen": {"width": 1920, "height": 1080}, # emulate full hd screen
-        #     "viewport": {"width": 1920, "height": 1080}, # emulate full hd viewport
-        #     "headless": False, # set true to not show browser window (invisible); set false to show browser window (visible)
-        #     "args":  [
-        #         # "--disable-blink-features=AutomationControlled" # navigator.webdriver = false
-        #         "--proxy-server"
-        #     ],
-        # "proxy" : {"server": "socks5://127.0.0.1:9050"}
-        # }
         # setup browser
         self.pw = sync_playwright().start()
         self.browser = self.pw.firefox
