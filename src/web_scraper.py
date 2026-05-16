@@ -6,9 +6,11 @@ import pathlib as path
 from datetime import datetime
 import pandas as pd
 
-PATH = path.Path()
+PATH = path.Path(__file__).parents[1]
 
 RAW_PATH = PATH / "data" / "raw"
+
+LIST_PATH = PATH / "data" / "list"
 
 class WebCrawler:
     # ----------------constants ----------------
@@ -47,8 +49,8 @@ class WebCrawler:
         self.page.goto(self.__BASE_URL) # visit english website
         time.sleep(random.randrange(10, 20, 5)*0.1)
         try:
-            button = self.page.get_by_role("button", name="Accept all") # search for accept all button
-            button.click(timeout=1000)
+            button = self.page.get_by_role("button", name="Reject all") # search for reject all button
+            button.click(timeout=10000)
         except PlaywrightTimeoutError:
             print("Timeout while trying to skip cookie banner.")
         time.sleep(random.randrange(10, 40, 5)*0.1) # insert random delay
@@ -68,7 +70,7 @@ class WebCrawler:
         
         try:
             search = self.page.get_by_role("tab", name=re.compile(r"Reviews")) # select reviews tab
-            search.click(timeout=1000)
+            search.click(timeout=3000)
         except PlaywrightTimeoutError:
             print("Timeout while trying to navigate to reviews tab.")
         time.sleep(random.randrange(10, 40, 5)*0.1) # insert random delay
@@ -89,8 +91,9 @@ class WebCrawler:
                       '1 stars': None,
                       'notice': None}
         for rating in stars:
-            raw_rating = self.page.get_by_role("img", name=re.compile(f"{rating}, ([0-9]+)( reviews)")).first.get_attribute("aria-label")  # regex match rating count
-            metadata[rating] = [re.findall(r'-?\d*\.?\d+', raw_rating)[1]] # skip star num an extract only the review count
+            raw_rating = self.page.get_by_role("row", name=re.compile(f"{rating}, ([0-9]+(,)?[0-9])( reviews)")).first.get_attribute("aria-label")  # regex match rating count
+            print(f"raw_rating: {raw_rating}")
+            metadata[rating] = [re.findall(r'\d*\,?\d+', raw_rating)[1]] # skip star num an extract only the review count
         
         # collect diffamation removal count
         notices = ["One review removed due to a defamation complaint.",
@@ -134,24 +137,24 @@ def write_to_csv(data, name, path):
 
 
 if __name__ == "__main__":
-    result = {}
-    query = r"Bermuda Döner Kortumstraße 17, Bochum"
+    restaurants = pd.read_csv(LIST_PATH / "restaurants.csv")
+    
+    for rows in restaurants.itertuples():
+        result = {}
+        query = f"{rows.name}, {rows.address}"
+        print(f"Query: {query}")
+        result['name'] = query
+        result["date"] = datetime.today().strftime(r'%Y-%m-%d')
 
-    result['name'] = query
-    result["date"] = datetime.today().strftime(r'%Y-%m-%d')
+        crawl = WebCrawler() # init playwright
 
-    crawl1 = WebCrawler() # init playwright
+        crawl.visit_maps() # visit google maps
+        crawl.search(query)
 
-    crawl1.visit_maps() # visit google maps
-    crawl1.search(query)
-
-    metadata = crawl1.get_star_metadata()
-    result.update(metadata)
-    # time.sleep(100)
-    crawl1.close()
-
-    print(result)
-    write_to_csv(result, "dump.csv", RAW_PATH)
+        metadata = crawl.get_star_metadata()
+        result.update(metadata)
+        crawl.close()
+        write_to_csv(result, "firstcrawl.csv", RAW_PATH)
   
 
 
