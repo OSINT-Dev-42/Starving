@@ -132,7 +132,7 @@ if __name__ == "__main__":
         query = f"{rows.name}, {rows.address}"
         print(f"Query: {query}")
         result['name'] = query
-        result["date"] = datetime.today().strftime(r'%Y-%m-%d')
+        result["date"] = datetime.today().strftime(r'%Y-%m-%d, %H:%M')
 
         crawl = WebCrawler() # init playwright
 
