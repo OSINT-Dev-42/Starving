@@ -26,7 +26,7 @@ class WebCrawler:
         # setup browser
         self.pw = sync_playwright().start()
         self.browser = self.pw.firefox
-        self.context = self.browser.launch(headless=False, proxy={"server": "socks5://127.0.0.1:9050"})
+        self.context = self.browser.launch(headless=True, proxy={"server": "socks5://127.0.0.1:9050"})
         self.page = self.context.new_page()
 
     def visit_maps(self): 

@@ -1,4 +1,9 @@
 services:
   app:
     build: .
+    volumes:
+      - ./data:/app/data
 
+
+volumes:
+  data:

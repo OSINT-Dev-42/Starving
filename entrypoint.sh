@@ -7,4 +7,4 @@ tor &
 # playwright install --with-deps
 
 echo "launch scraper"
-python3 ./src/web_scraper.py
+/usr/bin/sh -c "python3 ./src/web_scraper.py"

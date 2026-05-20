@@ -8,12 +8,13 @@ RUN apt-get update && \
     tor && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-
-COPY . .
+COPY ./requirements.txt .
 
 RUN pip3 install --break-system-packages --no-cache-dir -r requirements.txt
 RUN playwright install --with-deps
- 
+
+COPY . .
+
 RUN echo "SocksPort 0.0.0.0:9050" >> /etc/tor/torrc
 
 
