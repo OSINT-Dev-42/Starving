@@ -149,13 +149,13 @@ if __name__ == "__main__":
             crawl.close()
 
             if metadata is not None:
+                result.update(metadata)
+                print(f"Result: {result}")
+                write_to_csv(result, "firstcrawl.csv", RAW_PATH)
                 break
             tries -= 1
             print(f"Retrying... {tries} tries left.")
-
-        result.update(metadata)
-        print(f"Result: {result}")
-        write_to_csv(result, "firstcrawl.csv", RAW_PATH)
+            time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
         time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
   
 
