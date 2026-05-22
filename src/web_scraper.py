@@ -78,7 +78,12 @@ class WebCrawler:
                       '1 stars': None,
                       'notice': None}
         for rating in stars:
-            raw_rating = self.page.get_by_role("img", name=rating).first.get_attribute("aria-label")  # regex match rating count
+            try:
+                raw_rating = self.page.get_by_role("img", name=rating).first.get_attribute("aria-label", timeout=10000)  # regex match rating count
+            except PlaywrightTimeoutError:
+                print(f"Timeout while trying to extract {rating} count tab. Exit crawl.")
+                return None
+
             # print(f"raw_rating: {raw_rating}")
             metadata[rating] = [re.findall(r'\d*\,?\d+', raw_rating)[1]] # skip star num an extract only the review count
         
@@ -130,19 +135,26 @@ if __name__ == "__main__":
     for rows in restaurants.itertuples():
         result = {}
         query = f"{rows.name}, {rows.address}"
-        print(f"Query: {query}")
         result['name'] = query
         result["date"] = datetime.today().strftime(r'%Y-%m-%d, %H:%M')
 
-        crawl = WebCrawler() # init playwright
+        # handle pages that could not be loaded
+        tries = 10
+        while tries > 0:
+            print(f"Query: {query}")
+            crawl = WebCrawler() # init playwright
+            crawl.visit_maps() # visit google maps
+            crawl.search(query)
+            metadata = crawl.get_star_metadata()
+            crawl.close()
 
-        crawl.visit_maps() # visit google maps
-        crawl.search(query)
+            if metadata is not None:
+                break
+            tries -= 1
+            print(f"Retrying... {tries} tries left.")
 
-        metadata = crawl.get_star_metadata()
         result.update(metadata)
         print(f"Result: {result}")
-        crawl.close()
         write_to_csv(result, "firstcrawl.csv", RAW_PATH)
         time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
   
