@@ -1,0 +1,5 @@
+# crontap to execute the python script
+0 8,14,20 * * * python3 ./src/web_scraper.py 
+
+# crontap to execute the python script for testing
+# * * * * * python3 /app/src/web_scraper.py
