@@ -29,7 +29,7 @@ class WebCrawler:
         self.context = self.browser.launch(headless=True, proxy={"server": "socks5://127.0.0.1:9050"})
         self.page = self.context.new_page()
 
-    def visit_maps(self): 
+    def visit_maps(self):
         """
         Visit https://www.google.com/maps?hl=en and reject any cookie banners.
         """
@@ -52,9 +52,9 @@ class WebCrawler:
             search.press("Enter")
         except PlaywrightTimeoutError:
             print("Timeout while trying to find input field.")
-        
+
         time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
-        
+
         try:
             search = self.page.get_by_role("tab", name=re.compile(r"Reviews")) # select reviews tab
             search.click(timeout=10000)
@@ -86,7 +86,7 @@ class WebCrawler:
 
             # print(f"raw_rating: {raw_rating}")
             metadata[rating] = [re.findall(r'\d*\,?\d+', raw_rating)[1]] # skip star num an extract only the review count
-        
+
         # collect diffamation removal count
         notices = ["One review removed due to a defamation complaint.",
                    "Two to five reviews removed due to defamation complaints.",
@@ -131,7 +131,7 @@ def write_to_csv(data, name, path):
 
 if __name__ == "__main__":
     restaurants = pd.read_csv(LIST_PATH / "restaurants.csv")
-    
+
     for rows in restaurants.itertuples():
         result = {}
         query = f"{rows.name}, {rows.address}"
@@ -141,23 +141,22 @@ if __name__ == "__main__":
         # handle pages that could not be loaded
         tries = 10
         while tries > 0:
-            print(f"Query: {query}")
-            crawl = WebCrawler() # init playwright
-            crawl.visit_maps() # visit google maps
-            crawl.search(query)
-            metadata = crawl.get_star_metadata()
-            crawl.close()
+            try:
+                print(f"Query: {query}")
+                crawl = WebCrawler() # init playwright
+                crawl.visit_maps() # visit google maps
+                crawl.search(query)
+                metadata = crawl.get_star_metadata()
+                crawl.close()
 
-            if metadata is not None:
-                result.update(metadata)
-                print(f"Result: {result}")
-                write_to_csv(result, "firstcrawl.csv", RAW_PATH)
-                break
+                if metadata is not None:
+                    result.update(metadata)
+                    print(f"Result: {result}")
+                    write_to_csv(result, "firstcrawl.csv", RAW_PATH)
+                    break
+            except Exception as err:
+                print(f"Error: {err}")
             tries -= 1
             print(f"Retrying... {tries} tries left.")
             time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
         time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
-  
-
-
-    
