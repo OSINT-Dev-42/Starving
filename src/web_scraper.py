@@ -29,18 +29,28 @@ class WebCrawler:
         self.context = self.browser.launch(headless=True, proxy={"server": "socks5://127.0.0.1:9050"})
         self.page = self.context.new_page()
 
-    def visit_maps(self):
+    def visit_maps(self) -> bool:
         """
         Visit https://www.google.com/maps?hl=en and reject any cookie banners.
         """
-        self.page.goto(self.__BASE_URL) # visit english website
+        try:
+            response = self.page.goto(self.__BASE_URL) # visit english website
+            if response.status != 200:
+                print(f"Error while trying to load google maps. Status code: {response.status}. Exit crawl.")
+                return False
+        except Exception as err:
+            print("Timeout while trying to load google maps. Exit crawl.")
+            print(f"Error: {err}")
+            return False
         time.sleep(random.randrange(10, 20, 5)*0.1)
         try:
             button = self.page.get_by_role("button", name="Reject all") # search for reject all button
             button.click(timeout=3000)
-        except PlaywrightTimeoutError:
+        except Exception as err:
             print("Timeout while trying to skip cookie banner. No cookie banner found.")
+            print(f"Error: {err}")
         time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
+        return True
 
     def search(self, query: str):
         """
@@ -50,16 +60,18 @@ class WebCrawler:
             search = self.page.locator('input[name="q"]')
             search.fill(query) # input search query
             search.press("Enter")
-        except PlaywrightTimeoutError:
+        except Exception as err:
             print("Timeout while trying to find input field.")
+            print(f"Error: {err}")
 
         time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
 
         try:
             search = self.page.get_by_role("tab", name=re.compile(r"Reviews")) # select reviews tab
             search.click(timeout=10000)
-        except PlaywrightTimeoutError:
+        except Exception as err:
             print("Timeout while trying to navigate to reviews tab.")
+            print(f"Error: {err}")
         time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
 
     def get_star_metadata(self) -> dict:
@@ -80,8 +92,9 @@ class WebCrawler:
         for rating in stars:
             try:
                 raw_rating = self.page.get_by_role("img", name=rating).first.get_attribute("aria-label", timeout=10000)  # regex match rating count
-            except PlaywrightTimeoutError:
+            except Exception as err:
                 print(f"Timeout while trying to extract {rating} count tab. Exit crawl.")
+                print(f"Error: {err}")
                 return None
 
             # print(f"raw_rating: {raw_rating}")
@@ -102,7 +115,7 @@ class WebCrawler:
         for notice in notices:
             try:
                 metadata["notice"] = [self.page.get_by_text(notice).first.text_content(timeout=200)]
-            except PlaywrightTimeoutError:
+            except Exception:
                 continue
         return metadata
 
@@ -139,23 +152,27 @@ if __name__ == "__main__":
         result["date"] = datetime.today().strftime(r'%Y-%m-%d, %H:%M')
 
         # handle pages that could not be loaded
-        tries = 10
+        tries = 2
         while tries > 0:
             try:
                 print(f"Query: {query}")
                 crawl = WebCrawler() # init playwright
-                crawl.visit_maps() # visit google maps
-                crawl.search(query)
-                metadata = crawl.get_star_metadata()
-                crawl.close()
+                flag = crawl.visit_maps() # visit google maps
+                if flag is True:
+                    crawl.search(query)
+                    metadata = crawl.get_star_metadata()
+                    crawl.close()   
 
-                if metadata is not None:
-                    result.update(metadata)
-                    print(f"Result: {result}")
-                    write_to_csv(result, "firstcrawl.csv", RAW_PATH)
-                    break
+                    if metadata is not None:
+                        result.update(metadata)
+                        print(f"Result: {result}")
+                        write_to_csv(result, "firstcrawl.csv", RAW_PATH)
+                        break
+                else:
+                    crawl.close()
             except Exception as err:
                 print(f"Error: {err}")
+                crawl.close()
             tries -= 1
             print(f"Retrying... {tries} tries left.")
             time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
