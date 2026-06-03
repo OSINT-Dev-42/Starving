@@ -166,14 +166,14 @@ def write_to_csv(data, name, path):
     else:
         df.to_csv(output, mode="w", index=False)
 
-def restart_tor_service(start_time) -> float:
+def restart_tor_service(start_time, time_limit) -> float:
     """
     Restart tor service in order to change IP address.
     """
      # check if time limit is reached in order to change IP address
     end = time.time()
-    time_diff = end - start
-    if time_diff > 10:
+    time_diff = end - start_time
+    if time_diff > time_limit:
         print("Time limit reached. Restarting Tor service in order to change IP address...")
         try:
             subprocess.run(["sudo", "service", "tor", "restart"])
@@ -191,6 +191,7 @@ def restart_tor_service(start_time) -> float:
         except Exception as err:
             print(f"Error occurred while fetching new IP: {err}")
         return time.time() # reset timer
+    return start_time
 
 
 if __name__ == "__main__":
@@ -231,9 +232,9 @@ if __name__ == "__main__":
             time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
 
             # check if time limit is reached in order to change IP address
-            start = restart_tor_service(start)
+            start = restart_tor_service(start, 120)
           
         # check if time limit is reached in order to change IP address
-        start = restart_tor_service(start)
+        start = restart_tor_service(start, 120)
         print("\n---------------------------------------------------------------------------------\n")
         time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
