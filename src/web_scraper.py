@@ -1,16 +1,19 @@
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-import time
-import re
-import random
 import pathlib as path
+import random
+import re
+import time
 from datetime import datetime
+
 import pandas as pd
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import sync_playwright
 
 PATH = path.Path(__file__).parents[1]
 
 RAW_PATH = PATH / "data" / "raw"
 
 LIST_PATH = PATH / "data" / "list"
+
 
 class WebCrawler:
     # ----------------constants ----------------
@@ -26,7 +29,9 @@ class WebCrawler:
         # setup browser
         self.pw = sync_playwright().start()
         self.browser = self.pw.firefox
-        self.context = self.browser.launch(headless=True, proxy={"server": "socks5://127.0.0.1:9050"})
+        self.context = self.browser.launch(
+            headless=True, proxy={"server": "socks5://127.0.0.1:9050"}
+        )
         self.page = self.context.new_page()
 
     def visit_maps(self) -> bool:
@@ -34,22 +39,26 @@ class WebCrawler:
         Visit https://www.google.com/maps?hl=en and reject any cookie banners.
         """
         try:
-            response = self.page.goto(self.__BASE_URL) # visit english website
+            response = self.page.goto(self.__BASE_URL)  # visit english website
             if response.status != 200:
-                print(f"Error while trying to load google maps. Status code: {response.status}. Exit crawl.")
+                print(
+                    f"Error while trying to load google maps. Status code: {response.status}. Exit crawl."
+                )
                 return False
         except Exception as err:
             print("Timeout while trying to load google maps. Exit crawl.")
             print(f"Error: {err}")
             return False
-        time.sleep(random.randrange(10, 20, 5)*0.1)
+        time.sleep(random.randrange(10, 20, 5) * 0.1)
         try:
-            button = self.page.get_by_role("button", name="Reject all") # search for reject all button
+            button = self.page.get_by_role(
+                "button", name="Reject all"
+            )  # search for reject all button
             button.click(timeout=3000)
         except Exception as err:
             print("Timeout while trying to skip cookie banner. No cookie banner found.")
             print(f"Error: {err}")
-        time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
+        time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
         return True
 
     def search(self, query: str):
@@ -58,21 +67,23 @@ class WebCrawler:
         """
         try:
             search = self.page.locator('input[name="q"]')
-            search.fill(query) # input search query
+            search.fill(query)  # input search query
             search.press("Enter")
         except Exception as err:
             print("Timeout while trying to find input field.")
             print(f"Error: {err}")
 
-        time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
+        time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
 
         try:
-            search = self.page.get_by_role("tab", name=re.compile(r"Reviews")) # select reviews tab
+            search = self.page.get_by_role(
+                "tab", name=re.compile(r"Reviews")
+            )  # select reviews tab
             search.click(timeout=10000)
         except Exception as err:
             print("Timeout while trying to navigate to reviews tab.")
             print(f"Error: {err}")
-        time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
+        time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
 
     def get_star_metadata(self) -> dict:
         """
@@ -82,39 +93,53 @@ class WebCrawler:
         ``returns`` metada
         """
         # collect stars count
-        stars = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
-        metadata = {'5 stars': None,
-                      '4 stars': None,
-                      '3 stars': None,
-                      '2 stars': None,
-                      '1 stars': None,
-                      'notice': None}
+        stars = ["5 stars", "4 stars", "3 stars", "2 stars", "1 stars"]
+        metadata = {
+            "5 stars": None,
+            "4 stars": None,
+            "3 stars": None,
+            "2 stars": None,
+            "1 stars": None,
+            "notice": None,
+        }
         for rating in stars:
             try:
-                raw_rating = self.page.get_by_role("img", name=rating).first.get_attribute("aria-label", timeout=10000)  # regex match rating count
+                raw_rating = self.page.get_by_role(
+                    "img", name=rating
+                ).first.get_attribute(
+                    "aria-label", timeout=10000
+                )  # regex match rating count
             except Exception as err:
-                print(f"Timeout while trying to extract {rating} count tab. Exit crawl.")
+                print(
+                    f"Timeout while trying to extract {rating} count tab. Exit crawl."
+                )
                 print(f"Error: {err}")
                 return None
 
             # print(f"raw_rating: {raw_rating}")
-            metadata[rating] = [re.findall(r'\d*\,?\d+', raw_rating)[1]] # skip star num an extract only the review count
+            metadata[rating] = [
+                re.findall(r"\d*\,?\d+", raw_rating)[1]
+            ]  # skip star num an extract only the review count
 
         # collect diffamation removal count
-        notices = ["One review removed due to a defamation complaint.",
-                   "Two to five reviews removed due to defamation complaints.",
-                   "Six to ten reviews removed due to defamation complaints.",
-                   "11 to 20 reviews removed due to defamation complaints.",
-                   "21 to 50 reviews removed due to defamation complaints.",
-                   "51 to 100 reviews removed due to defamation complaints.",
-                   "101 to 150 reviews removed due to defamation complaints.",
-                   "151 to 200 reviews removed due to defamation complaints.",
-                   "201 to 250 reviews removed due to defamation complaints.",
-                   "Over 250 reviews removed due to defamation complaints.",]
+        notices = [
+            "One review removed due to a defamation complaint.",
+            "Two to five reviews removed due to defamation complaints.",
+            "Six to ten reviews removed due to defamation complaints.",
+            "11 to 20 reviews removed due to defamation complaints.",
+            "21 to 50 reviews removed due to defamation complaints.",
+            "51 to 100 reviews removed due to defamation complaints.",
+            "101 to 150 reviews removed due to defamation complaints.",
+            "151 to 200 reviews removed due to defamation complaints.",
+            "201 to 250 reviews removed due to defamation complaints.",
+            "Over 250 reviews removed due to defamation complaints.",
+        ]
 
         for notice in notices:
             try:
-                metadata["notice"] = [self.page.get_by_text(notice).first.text_content(timeout=200)]
+                metadata["notice"] = [
+                    self.page.get_by_text(notice).first.text_content(timeout=200)
+                ]
             except Exception:
                 continue
         return metadata
@@ -136,10 +161,9 @@ def write_to_csv(data, name, path):
     df = pd.DataFrame(data)
     # check if file exists
     if output.is_file():
-        df.to_csv(output , mode="a", index=False, header=False)
+        df.to_csv(output, mode="a", index=False, header=False)
     else:
         df.to_csv(output, mode="w", index=False)
-
 
 
 if __name__ == "__main__":
@@ -148,20 +172,20 @@ if __name__ == "__main__":
     for rows in restaurants.itertuples():
         result = {}
         query = f"{rows.name}, {rows.address}"
-        result['name'] = query
-        result["date"] = datetime.today().strftime(r'%Y-%m-%d, %H:%M')
+        result["name"] = query
+        result["date"] = datetime.today().strftime(r"%Y-%m-%d, %H:%M")
 
         # handle pages that could not be loaded
-        tries = 2
+        tries = 15
         while tries > 0:
             try:
                 print(f"Query: {query}")
-                crawl = WebCrawler() # init playwright
-                flag = crawl.visit_maps() # visit google maps
+                crawl = WebCrawler()  # init playwright
+                flag = crawl.visit_maps()  # visit google maps
                 if flag is True:
                     crawl.search(query)
                     metadata = crawl.get_star_metadata()
-                    crawl.close()   
+                    crawl.close()
 
                     if metadata is not None:
                         result.update(metadata)
@@ -175,5 +199,5 @@ if __name__ == "__main__":
                 crawl.close()
             tries -= 1
             print(f"Retrying... {tries} tries left.")
-            time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
-        time.sleep(random.randrange(20, 50, 5)*0.1) # insert random delay
+            time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
+        time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
