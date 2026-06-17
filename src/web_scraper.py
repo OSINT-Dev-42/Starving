@@ -8,6 +8,7 @@ import json
 import pandas as pd
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
+from proxy.rotate_tor_ip import rotate_tor_ip
 
 PATH = path.Path(__file__).parents[1]
 
@@ -168,19 +169,14 @@ def write_to_csv(data, name, path):
 
 def restart_tor_service(start_time, time_limit) -> float:
     """
-    Restart tor service in order to change IP address.
+    Handler to change IP address.
     """
      # check if time limit is reached in order to change IP address
     end = time.time()
     time_diff = end - start_time
     if time_diff > time_limit:
         print("Time limit reached. Restarting Tor service in order to change IP address...")
-        try:
-            subprocess.run(["sudo", "service", "tor", "restart"])
-        except Exception as err:
-            print(f"Error while trying to restart tor service:  {err}")
-        time.sleep(2) # wait for tor to restart
-
+        rotate_tor_ip() # rotate tor ip address
         # check new IP address and tor network status
         try:
             response = subprocess.run(["curl","--socks5-hostname","127.0.0.1:9050","https://check.torproject.org/api/ip"],
