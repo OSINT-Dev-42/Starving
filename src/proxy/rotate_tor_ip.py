@@ -6,7 +6,7 @@ from stem.control import Controller
 def rotate_tor_ip():
     print("Initiating Tor proxy circuit rotation...")
     try:
-        with Controller.from_port(address="127.0.0.1", port="9051") as controller:
+        with Controller.from_port(address="127.0.0.1", port=9051) as controller:
             controller.authenticate()
 
             if controller.is_newnym_available():
@@ -16,4 +16,4 @@ def rotate_tor_ip():
             else:
                 print("Newnym request rate-limited by Tor. Waitign for cooldown...")
     except Exception as e:
-        print(f"Failed to communicate with Tor ContrilPort: {e}")
+        print(f"Failed to communicate with Tor ControlPort: {e}")

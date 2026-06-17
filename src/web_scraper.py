@@ -175,7 +175,7 @@ def restart_tor_service(start_time, time_limit) -> float:
     end = time.time()
     time_diff = end - start_time
     if time_diff > time_limit:
-        print("Time limit reached. Restarting Tor service in order to change IP address...")
+        print("Time limit reached. Changing IP address...")
         rotate_tor_ip() # rotate tor ip address
         # check new IP address and tor network status
         try:
