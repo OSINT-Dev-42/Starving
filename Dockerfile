@@ -14,10 +14,10 @@ ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.
     SUPERCRONIC=supercronic-linux-amd64
 
 RUN curl -fsSLO "$SUPERCRONIC_URL" \
- && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
- && chmod +x "$SUPERCRONIC" \
- && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
- && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
+    && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
+    && chmod +x "$SUPERCRONIC" \
+    && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
+    && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
 WORKDIR /app
 COPY ./requirements.txt .
@@ -28,7 +28,9 @@ RUN playwright install --with-deps
 COPY . .
 COPY crontab /etc/crontab
 
-RUN echo "SocksPort 0.0.0.0:9050" >> /etc/tor/torrc
+RUN echo "SocksPort 0.0.0.0:9050" >> /etc/tor/torrc && \
+    echo "ControlPort 127.0.0.1:9051" >> /etc/tor/torrc && \
+    echo "CookieAuthentication 0" >> /etc/tor/torrc
 
 
 CMD ["./entrypoint.sh"]
