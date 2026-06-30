@@ -1,12 +1,12 @@
 import pandas as pd
 import pathlib as path
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
+import plotly.express as px
+
 
 PATH = path.Path(__file__).parents[2]
 
-CSV_PATH = PATH / 'data' / 'raw' / 'starving-crawl.csv'
-PNG_PATH = PATH / 'data' / 'graphs' 
+CSV_PATH = PATH / 'data' / 'raw' / 'firstcrawl.csv'
+PNG_PATH = PATH / 'data' / 'graphs' / 'interesting'
 
 def find_anomalies(df):
     # get a list of restaurants in the dataframe by unique name
@@ -35,24 +35,23 @@ def plot_data(df):
             continue
         # get the measurements for this restaurant in its own dataframe
         r_df = df[df['name'] == restaurant]
+        r_df['date'] = pd.to_datetime(r_df['date'], format='mixed')
+        # Sort by date (critical for line graphs!)
         r_df = r_df.sort_values('date')
         
-        plt.figure(figsize=(10,6))
-        plt.plot(r_df['date'], r_df['5 stars'], label='5 stars')
-        plt.plot(r_df['date'], r_df['4 stars'], label='4 stars')
-        plt.plot(r_df['date'], r_df['3 stars'], label='3 stars')
-        plt.plot(r_df['date'], r_df['2 stars'], label='2 stars')
-        plt.plot(r_df['date'], r_df['1 stars'], label='1 stars')
-        
-        ax = plt.gca()
-        ax.xaxis.set_major_locator(MaxNLocator(nbins=10))
-        plt.xlabel('Date')
-        plt.ylabel('Number of stars')
-        plt.legend()
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(path.Path(PNG_PATH / (restaurant.replace('/', '-') + '.png')))
-        plt.close()
+        # Reshape data
+        r_df_long = r_df.melt(id_vars=['date'],
+                    value_vars=['5 stars', '4 stars', '3 stars', '2 stars', '1 stars'],
+                    var_name='Star Rating',
+                    value_name='Count')
+        # print(restaurant)
+        # print(r_df_long)
+        fig = px.line(r_df_long, x='date', y='Count', color='Star Rating',
+            title=f'{restaurant}',
+            labels={'date': 'Date', 'Count': 'Number of stars'},
+            height=600, width=1000)
+        fig.write_html(PNG_PATH / (restaurant.replace('/', '-') + '.html'))
+        break
 
 
 df = pd.read_csv(CSV_PATH)
@@ -67,5 +66,5 @@ for col in star_cols:
     except ValueError:
         print(df[col])
 # print(len(df[df['name'] == 'Trattoria Momo, Bochum Stadionring 9']))
-# plot_data(df)
-find_anomalies(df)
+plot_data(df)
+#find_anomalies(df)
