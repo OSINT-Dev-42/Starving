@@ -12,4 +12,7 @@ playwright install --with-deps
 sudo apt install tor # install tor
 sudo systemctl start tor # start tor
 # tor listens now on socks5://127.0.0.1:9050
+
+sudo visudo # add the following line to the end of the file:
+# your_username ALL=(root) NOPASSWD: /usr/sbin/service tor restart
 ```
