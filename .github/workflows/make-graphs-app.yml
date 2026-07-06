@@ -26,9 +26,9 @@ jobs:
       run: python src/graphs/make_graphs.py
     - name: Commit and push generated files      
       run: |        
-      git config --local user.email "action@github.com"
-      git config --local user.name "GitHub Action"
-      git add data/graphs/interesting_differences/*.html
-      git add data/graphs/interesting_total_count/*.html
-      git commit -m "Update generated graphs" || echo "No changes to commit"
-      git push
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add data/graphs/interesting_differences/*.html
+        git add data/graphs/interesting_total_count/*.html
+        git commit -m "Update generated graphs" || echo "No changes to commit"
+        git push
