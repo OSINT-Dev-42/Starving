@@ -11,6 +11,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v5
@@ -31,4 +33,4 @@ jobs:
         git add data/graphs/interesting_differences/*.html
         git add data/graphs/interesting_total_count/*.html
         git commit -m "Update generated graphs" || echo "No changes to commit"
-        git push
+        git push origin HEAD:graphs
