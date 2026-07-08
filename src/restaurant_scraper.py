@@ -105,10 +105,10 @@ class WebCrawler:
     
     
     def get_restaurant_results(self, limit: int=50):
-    """
-    First scroll until we see either limit-amount of entries or until the end of the list is reached.
-    Then we save all entries into the results array and return it.
-    """
+        """
+        First scroll until we see either limit-amount of entries or until the end of the list is reached.
+        Then we save all entries into the results array and return it.
+        """
         results = []
         
         try:

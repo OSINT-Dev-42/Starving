@@ -1,9 +1,9 @@
 services:
   app:
+    restart: "always"
     build: .
     volumes:
       - ./data:/app/data
-
 
 volumes:
   data:

@@ -3,10 +3,12 @@ import random
 import re
 import time
 from datetime import datetime
-
+import subprocess
+import json
 import pandas as pd
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
+from proxy.rotate_tor_ip import rotate_tor_ip
 
 PATH = path.Path(__file__).parents[1]
 
@@ -165,9 +167,33 @@ def write_to_csv(data, name, path):
     else:
         df.to_csv(output, mode="w", index=False)
 
+def restart_tor_service(start_time, time_limit) -> float:
+    """
+    Handler to change IP address.
+    """
+     # check if time limit is reached in order to change IP address
+    end = time.time()
+    time_diff = end - start_time
+    if time_diff > time_limit:
+        print("Time limit reached. Changing IP address...")
+        rotate_tor_ip() # rotate tor ip address
+        # check new IP address and tor network status
+        try:
+            response = subprocess.run(["curl","--socks5-hostname","127.0.0.1:9050","https://check.torproject.org/api/ip"],
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            response = json.loads(response.stdout.decode(encoding="utf-8"))
+            print(f"New IP address: {response['IP']}")
+            print(f"Tor network status: {response['IsTor']}")
+        except Exception as err:
+            print(f"Error occurred while fetching new IP: {err}")
+        return time.time() # reset timer
+    return start_time
+
 
 if __name__ == "__main__":
     restaurants = pd.read_csv(LIST_PATH / "restaurants.csv")
+    
+    start = time.time() # track time
 
     for rows in restaurants.itertuples():
         result = {}
@@ -200,4 +226,11 @@ if __name__ == "__main__":
             tries -= 1
             print(f"Retrying... {tries} tries left.")
             time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
+
+            # check if time limit is reached in order to change IP address
+            start = restart_tor_service(start, 120)
+          
+        # check if time limit is reached in order to change IP address
+        start = restart_tor_service(start, 120)
+        print("\n---------------------------------------------------------------------------------\n")
         time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay

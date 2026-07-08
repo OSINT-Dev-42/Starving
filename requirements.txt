@@ -1,2 +1,5 @@
 pandas==3.0.2
-playwright==1.59.0
+playwright==1.60.0
+stem==1.8.2
+plotly==6.7.0
+

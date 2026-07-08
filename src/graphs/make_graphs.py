@@ -1,0 +1,120 @@
+import pandas as pd
+import pathlib as path
+import plotly.express as px
+
+
+PATH = path.Path(__file__).parents[2]
+
+CSV_PATH = PATH / 'data' / 'raw' / 'firstcrawl.csv'
+TOTAL_COUNT_PNG_PATH = PATH / 'data' / 'graphs' / 'interesting_total_count'
+DIFF_PNG_PATH = PATH / 'data' / 'graphs' / 'interesting_differences'
+
+
+def find_anomalies(df):
+    # get a list of restaurants in the dataframe by unique name
+
+    all_unique_restaurants = df['name'].unique()
+    maximum_dict = dict()
+    minimum_dict = dict()
+
+    star_cols = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
+    for restaurant in all_unique_restaurants:
+        restaurant_df = df[df['name'] == restaurant]
+        maximum_dict[restaurant] = 0
+        minimum_dict[restaurant] = 0
+        for col in star_cols:
+            diff = restaurant_df[col].diff()
+            
+            try:
+                maximum_changement = int(diff.max())
+                minimum_changement = int(diff.min())
+            except ValueError:
+                print(f"diff error case: {restaurant} {diff}")
+            i = 1
+            while maximum_changement > 0 and maximum_changement == abs(minimum_changement):
+                # get next highest and lowest 
+                maximum_changement = int(diff.nlargest(i+1).iloc[i])
+                minimum_changement = int(diff.nsmallest(i+1).iloc[i])
+                i += 1
+                
+            if maximum_dict[restaurant] < maximum_changement and maximum_changement != abs(minimum_changement):
+                maximum_dict[restaurant] = maximum_changement
+            if minimum_dict[restaurant] > minimum_changement and maximum_changement != abs(minimum_changement):
+                minimum_dict[restaurant] = minimum_changement
+
+    max_values = pd.DataFrame(list(maximum_dict.items()), columns=['name', 'max_value'])
+    max_values = max_values.sort_values('max_value')
+    max_values = max_values[max_values['max_value'] > 1]
+    
+    min_values = pd.DataFrame(list(minimum_dict.items()), columns=['name', 'min_value'])
+    min_values = min_values[min_values['min_value'] < -1]
+    min_values = min_values.sort_values('min_value')
+    return min_values, max_values
+
+def plot_data(df, restaurants):
+    # get a list of restaurants in the dataframe by unique name
+
+    for restaurant in restaurants:
+        # drop restaurant if there are less than 3 entries
+        if len(df[df['name'] == restaurant]) < 3:
+            print(f"The restaurant named {restaurant} was dropped, because only {len(df[df['name'] == restaurant])} entries are saved.")
+            continue
+        # get the measurements for this restaurant in its own dataframe
+        r_df = df[df['name'] == restaurant]
+        star_cols = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
+        
+        
+        r_df['date'] = pd.to_datetime(r_df['date'], format='mixed')
+        # Sort by date (critical for line graphs!)
+        r_df = r_df.sort_values('date')
+        
+        # Reshape data
+        r_df_long = r_df.melt(id_vars=['date'],
+                    value_vars=['5 stars', '4 stars', '3 stars', '2 stars', '1 stars'],
+                    var_name='Star Rating',
+                    value_name='Count')
+        fig = px.line(r_df_long, x='date', y='Count', color='Star Rating',
+            title=f'{restaurant} - Total Count of Ratings',
+            labels={'date': 'Date', 'Count': 'Number of stars'},
+            height=600, width=1000)
+        fig.write_html(TOTAL_COUNT_PNG_PATH / (restaurant.replace('/', '-') + '.html'))
+        
+        # also plot the differences
+        r_diff_df = r_df
+        r_diff_df[star_cols] = r_diff_df[star_cols].diff()
+        r_df['date'] = pd.to_datetime(r_df['date'], format='mixed')
+        # Sort by date (critical for line graphs!)
+        r_df = r_df.sort_values('date')
+        
+        # Reshape data
+        r_df_long = r_df.melt(id_vars=['date'],
+                    value_vars=['5 stars', '4 stars', '3 stars', '2 stars', '1 stars'],
+                    var_name='Star Rating',
+                    value_name='Count')
+        fig = px.line(r_df_long, x='date', y='Count', color='Star Rating',
+            title=f'{restaurant} - Changement of Reviews',
+            labels={'date': 'Date', 'Count': 'Number of added or deleted stars'},
+            height=600, width=1000)
+        fig.write_html(DIFF_PNG_PATH / (restaurant.replace('/', '-') + '.html'))
+
+
+
+df = pd.read_csv(CSV_PATH)
+# data cleaning for the line with stashed changes
+df = df[df.name != '>>>>>>> Stashed changes']
+
+# do data cleaning for when the stars are saved as strings
+star_cols = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
+for col in star_cols:
+    try:
+        df[col] = df[col].astype(str).str.replace(',', '').astype(float).astype(int)
+    except ValueError:
+        print(df[col])
+        
+        
+
+min_values, max_values = find_anomalies(df)
+restaurants = pd.concat([min_values, max_values], ignore_index=True)
+restaurants = restaurants['name'].unique()
+plot_data(df, restaurants)
+
