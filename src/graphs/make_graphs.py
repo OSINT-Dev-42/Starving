@@ -112,6 +112,13 @@ def make_sankey_plot(df):
     add_10_14 = len(max_values[(max_values['max_value'] >= 10) & (max_values['max_value'] < 15)])
     add_15_19 = len(max_values[(max_values['max_value'] >= 15) & (max_values['max_value'] < 20)])
     add_over_20 = len(max_values[(max_values['max_value'] >= 20)])
+    
+    delete_1 = len(min_values[(min_values['min_value'] > -2)])
+    delete_2_4 = len(min_values[(min_values['min_value'] <= -2) & (min_values['min_value'] > -5)])
+    delete_5_9 = len(min_values[(min_values['min_value'] <= -5) & (min_values['min_value'] > -10)])
+    delete_10_19 = len(min_values[(min_values['min_value'] <= -10) & (min_values['min_value'] > -20)])
+    delete_20_49 = len(min_values[(min_values['min_value'] <= -20) & (min_values['min_value'] > -50)])
+    delete_over_50 = len(min_values[(min_values['min_value'] <= -50)])
     print(number_with_additions, add_1, add_2_4, add_5_9, add_10_14, add_15_19, add_over_20) 
     fig = go.Figure(data=[go.Sankey(
         node = dict(
@@ -128,7 +135,28 @@ def make_sankey_plot(df):
           value = [number_with_additions, total_restaurants - number_with_additions, add_1, add_2_4, add_5_9, add_10_14]
       ))])
 
-    fig.show()
+    fig.write_html(GENERAL_PNG_PATH / 'restaurants_with_new_reviews.html')
+    
+
+    fig = go.Figure(data=[go.Sankey(
+        node = dict(
+          thickness = 5,
+          line = dict(color = "green", width = 0.1),
+          label = ["Total", "With New Deletions", "Without New Deletions", "One New Deletion", "2-4 New Deletions", "5-9 New Deletions", "10-19 New Deletions", "20-49 New Deletions", "50+ New Deletions"],
+          color = "blue"
+        ),
+        link = dict(
+            
+          # indices correspond to labels
+          source = [0, 0, 1, 1, 1, 1, 1, 1], 
+          target = [1, 2, 3, 4, 5, 6, 7, 8],
+          value = [number_with_deletions, total_restaurants - number_with_deletions, delete_1, delete_2_4, delete_5_9, delete_10_19, delete_20_49, delete_over_50]
+      ))])
+    print(min_values)
+    print(total_restaurants, number_with_deletions, delete_1)
+    fig.write_html(GENERAL_PNG_PATH / 'restaurants_with_deletions.html')
+    
+    
     
     
     
