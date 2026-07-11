@@ -43,7 +43,7 @@
 </Section>
 <Section title="How we did it">
     Here is an example of our scraper in action:
-    <img src="/step-by-step.gif" alt="Step by step animation of scraper" loading="lazy" />
+    <img src="step-by-step.gif" alt="Step by step animation of scraper" loading="lazy" />
     <div class="flex gap-4 w-full items-center">
         <Card.Root class="min-w-80">
             <Card.Header>

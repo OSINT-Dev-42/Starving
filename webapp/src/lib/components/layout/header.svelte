@@ -10,7 +10,7 @@
 		>
 	</div>
 	<div class="flex gap-8">
-		<a href="/ethics"><b class="">Ethics</b></a>
-		<a href="/methodology"><b class="">Methodology</b></a>
+		<a href="ethics"><b class="">Ethics</b></a>
+		<a href="methodology"><b class="">Methodology</b></a>
 	</div>
 </nav>
