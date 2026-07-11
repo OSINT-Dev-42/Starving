@@ -133,3 +133,7 @@
 		@apply font-sans;
 	}
 }
+
+body {
+    overflow-x: hidden;
+}

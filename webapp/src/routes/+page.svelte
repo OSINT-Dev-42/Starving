@@ -5,8 +5,9 @@
 	import type { Restaurant } from './columns';
 	import DataTables from './data-tables.svelte';
 	import { columns } from './columns';
-
-	const rawCsv = (await import('$lib/assets/firstcrawl.csv?raw')).default;
+	import * as Card from '$lib/components/ui/card/index';
+	import ArrowRight from '@tabler/icons-svelte/icons/arrow-right';
+	import Section from '$lib/components/layout/section.svelte';
 
 	let ready = $state(false);
 
@@ -35,12 +36,43 @@
 	$inspect(ready);
 </script>
 
-<h1 class="text-4xl">Problem to solve</h1>
-
-{#if ready}
-	We are ready
-	<!-- {restaurantData.length} restaurants found
-	<br />
-	First restaurant: {restaurantData[0].name}
-	<DataTables data={restaurantData} {columns} /> -->
-{/if}
+<Section title="Problem to solve">
+	<p>
+	So, you and your friends are looking for a place to eat in the evening.
+	</p>
+</Section>
+<Section title="How we did it">
+    Here is an example of our scraper in action:
+    <img src="/step-by-step.gif" alt="Step by step animation of scraper" loading="lazy" />
+    <div class="flex gap-4 w-full items-center">
+        <Card.Root class="min-w-80">
+            <Card.Header>
+                <Card.Title>
+                    Ethics
+                </Card.Title>
+                <Card.Description>
+                    How we decided on what data to use and where to get it...
+                </Card.Description>
+            </Card.Header>
+            <Card.Content>
+                <a class="flex items-center gap-1" href="/ethics">Learn more <ArrowRight/> </a>
+            </Card.Content>
+        </Card.Root>
+        <Card.Root class="min-w-80">
+            <Card.Header>
+                <Card.Title>
+                    Methodology
+                </Card.Title>
+                <Card.Description>
+                    The special secret sauce to gather the needed data...
+                </Card.Description>
+            </Card.Header>
+            <Card.Content>
+                <a class="flex items-center gap-1" href="/methodology">Learn more <ArrowRight/> </a>
+            </Card.Content>
+        </Card.Root>
+    </div>
+</Section>
+<Section title="Analysis">
+    Test
+</Section>

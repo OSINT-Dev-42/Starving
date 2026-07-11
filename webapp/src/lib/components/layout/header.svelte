@@ -1,13 +1,16 @@
 <script lang="ts">
-
+	import icon from '$lib/assets/star-check.svg';
 </script>
 
-<nav class="flex justify-between items-center border-b w-screen px-12 py-4 mb-12">
-    <div>
-        <a href="/"><b class="text-4xl font-black">Starving</b></a>
-    </div>
-    <div class="flex gap-8">
-        <a href="/ethics"><b class="">Ethics</b></a>
-        <a href="/methodology"><b class="">Methodology</b></a>
-    </div>
+<nav class="mb-12 flex w-screen items-center justify-between border-b px-12 py-4">
+	<div>
+		<a class="flex items-center gap-2" href="/"
+			><img src={icon} alt="Starving" class="h-8 w-8" />
+			<b class="text-4xl font-black">Starving</b></a
+		>
+	</div>
+	<div class="flex gap-8">
+		<a href="/ethics"><b class="">Ethics</b></a>
+		<a href="/methodology"><b class="">Methodology</b></a>
+	</div>
 </nav>
