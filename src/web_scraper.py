@@ -25,7 +25,7 @@ class WebCrawler:
 
     def __init__(self):
         """
-        Creates chromium ``browser`` with ``context`` and ``page`` tab.
+        Creates firefox ``browser`` with ``context`` and ``page`` tab.
         Note that browsers do not allow launching multiple instances with the same User Data Directory.\n
             - !simultaneous WebCrawler instances are not supported
         """
