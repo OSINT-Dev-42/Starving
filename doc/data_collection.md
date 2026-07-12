@@ -71,7 +71,7 @@ After that the web scraper locates the reviews tab and clicks on it.
 
 We insert a random delay into every action to mimic user input. Additionally, we only use the same IP address for a fixed interval of two minutes to prevent bot detection. The IP rotation is implemented by assigning a new identity to the [Tor](https://www.torproject.org/?noredirect=1) instance via the `rotate_tor_ip.py` script.
 
-![Steps performed by the web scraper](/doc/figures/BlockDiagram.png)
+![Steps performed by the web scraper](/doc/figures/BlockDiagram.svg)
 
 ## Error Handling
 Every action performed by [Playwright](https://playwright.dev/python/docs/api/class-playwright) takes place within a try block to prevent crashes. In most cases, a blocked IP address by Google is the culprit. Therefore, if we cannot visit Google Maps, we rotate our IP address independently from our fixed interval.  
