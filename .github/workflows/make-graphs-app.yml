@@ -32,5 +32,6 @@ jobs:
         git config --local user.name "GitHub Action"
         git add data/graphs/interesting_differences/*.html
         git add data/graphs/interesting_total_count/*.html
+        git add data/graphs/general/*.html
         git commit -m "Update generated graphs" || echo "No changes to commit"
         git push origin HEAD:main
