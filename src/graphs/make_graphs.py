@@ -2,6 +2,7 @@ import pandas as pd
 import pathlib as path
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 
 
 PATH = path.Path(__file__).parents[2]
@@ -158,10 +159,300 @@ def make_sankey_plot(df):
     
     
     
+def check_for_note(df, deletion_restaurants):
+    """
+    Function to check how many restaurants have a note about deletions, how many of the ones with deletions have a note.
+    """
     
+
+    total_number_of_restaurants = len(df['name'].unique())
+
+    df_latest = df.drop_duplicates(subset=['name'], keep='last')
+    notice_buckets = df_latest['notice'].value_counts()
+    custom_order = ['101 to 150 reviews removed due to defamation complaints.', '51 to 100 reviews removed due to defamation complaints.', '21 to 50 reviews removed due to defamation complaints.', '11 to 20 reviews removed due to defamation complaints.', 'Six to ten reviews removed due to defamation complaints.', 'Two to five reviews removed due to defamation complaints.']
+    #print(notice_buckets)
+    notice_buckets = notice_buckets.reindex(custom_order)
     
+    #print(notice_buckets)
+    # Bar width in dots
+    bar_width = 10
+
+    # Calculate grid dimensions
+    num_rows = int(np.ceil(total_number_of_restaurants / bar_width))
+
+    # Create a grid to track which dot belongs to which bucket
+    grid = np.full((num_rows, bar_width), None, dtype=object)
+
+    # Fill the grid: colored dots on top, grey on bottom
+    dot_index =  total_number_of_restaurants
+
+    # Top rows: colored dots (one bucket at a time, left to right, top to bottom)
+    for bucket_name in notice_buckets.index:
+        bucket_count = notice_buckets[bucket_name]
+        for i in range(bucket_count):
+            if dot_index > 0:
+                row = num_rows - 1 - (dot_index // bar_width)
+                col = dot_index % bar_width
+                grid[row, col] = bucket_name
+                dot_index -= 1
+
+    # Bottom rows: grey dots (remaining)
+    for row in range(num_rows):
+        for col in range(bar_width):
+            if grid[row, col] is None and dot_index > 0:
+                grid[row, col] = 'untracked'
+                dot_index -= 1
+
+    # Define colors for each bucket
+    unique_buckets = list(notice_buckets.index)
+    colors_palette = [
+        '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+        '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+    ]
+    color_map = {bucket: colors_palette[i % len(colors_palette)] for i, bucket in enumerate(unique_buckets)}
+    color_map['untracked'] = '#cccccc'  # Grey for untracked
+
+    # Extract x, y, color, and hover text for scatter plot
+    x_coords = []
+    y_coords = []
+    colors = []
+    hover_texts = []
+
+    for row in range(num_rows):
+        for col in range(bar_width):
+            if grid[row, col] is not None:
+                x_coords.append(col)
+                y_coords.append(row)
+                bucket = grid[row, col]
+                colors.append(color_map[bucket])
+                if bucket == 'untracked':
+                    hover_texts.append('No deleted reviews')
+                else:
+                    hover_texts.append(f'{bucket} deleted reviews')
+
+    # Create scatter plot
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=x_coords,
+        y=y_coords,
+        mode='markers',
+        marker=dict(
+            size=10,
+            color=colors,
+            line=dict(width=1, color='white')
+        ),
+        text=hover_texts,
+        hovertemplate='<b>%{text}</b><extra></extra>',
+        showlegend=False
+    ))
+
+    # Update layout
+    fig.update_layout(
+        title=f'Distribution of {total_number_of_restaurants} Restaurants by Deleted Reviews given by notice.',
+        xaxis=dict(
+            range=[-0.5, bar_width - 0.5],
+            showgrid=False,
+            zeroline=False,
+            showticklabels=False
+        ),
+        yaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            showticklabels=False,
+            autorange='reversed'
+        ),
+        plot_bgcolor='white',
+        hovermode='closest',
+        width=400,
+        height=150 + (num_rows * 30)
+    )
+
+
+    # Create custom legend
+    legend_traces = []
+    for bucket in unique_buckets:
+        count = notice_buckets[bucket]
+        legend_traces.append(
+            go.Scatter(
+                x=[None], y=[None],
+                mode='markers',
+                marker=dict(size=10, color=color_map[bucket], line=dict(width=1, color='white')),
+                name=f'{bucket.split('reviews')[0]} ({count})',
+                showlegend=True
+            )
+        )
+
+    # Add grey dot for untracked
+    untracked_count = total_number_of_restaurants - notice_buckets.sum()
+    legend_traces.append(
+        go.Scatter(
+            x=[None], y=[None],
+            mode='markers',
+            marker=dict(size=10, color='#cccccc', line=dict(width=1, color='white')),
+            name=f'No Deletions ({untracked_count})',
+            showlegend=True
+        )
+    )
+
+    # Add legend traces to figure
+    for trace in legend_traces:
+        fig.add_trace(trace)
+
+    fig.write_html(GENERAL_PNG_PATH / 'gridplot-notice-deletions.html')
+
+
+def make_gridplot_tracked_deletions(df, min_values):
+    """
+    Function to check how many restaurants have a note about deletions, how many of the ones with deletions have a note.
+    """
+    #print(min_values)
+    delete_1 = len(min_values[(min_values['min_value'] > -2)])
+    delete_2_5 = len(min_values[(min_values['min_value'] <= -2) & (min_values['min_value'] >= -5)])
+    delete_6_10 = len(min_values[(min_values['min_value'] < -5) & (min_values['min_value'] >= -10)])
+    delete_11_20 = len(min_values[(min_values['min_value'] < -10) & (min_values['min_value'] >= -20)])
+    delete_21_50 = len(min_values[(min_values['min_value'] < -20) & (min_values['min_value'] >= -50)])
+    delete_51_100 = len(min_values[(min_values['min_value'] < -50) & (min_values['min_value'] >= -100)])
+    delete_101_150 = len(min_values[(min_values['min_value'] < -100) & (min_values['min_value'] >= -150)])
     
+
+    total_number_of_restaurants = len(df['name'].unique())
+
+    # df_latest = df.drop_duplicates(subset=['name'], keep='last')
+    notice_buckets = pd.DataFrame({
+        'bucket': ['101 to 150', '51 to 100', '21 to 50', '11 to 20', 'Six to ten', 'Two to five', 'one'],
+        'count': [delete_101_150, delete_51_100, delete_21_50, delete_11_20, delete_6_10, delete_2_5, delete_1]
+        })
     
+    print(notice_buckets)
+    # Bar width in dots
+    bar_width = 10
+
+    # Calculate grid dimensions
+    num_rows = int(np.ceil(total_number_of_restaurants / bar_width))
+
+    # Create a grid to track which dot belongs to which bucket
+    grid = np.full((num_rows, bar_width), None, dtype=object)
+
+    # Fill the grid: colored dots on top, grey on bottom
+    dot_index =  total_number_of_restaurants
+
+    # Top rows: colored dots (one bucket at a time, left to right, top to bottom)
+    for bucket_name in notice_buckets['bucket']:
+        print(bucket_name)
+        bucket_count = notice_buckets.loc[notice_buckets['bucket'] == bucket_name, 'count'].values[0]
+        for i in range(bucket_count):
+            if dot_index > 0:
+                row = num_rows - 1 - (dot_index // bar_width)
+                col = dot_index % bar_width
+                grid[row, col] = bucket_name
+                dot_index -= 1
+
+    # Bottom rows: grey dots (remaining)
+    for row in range(num_rows):
+        for col in range(bar_width):
+            if grid[row, col] is None and dot_index > 0:
+                grid[row, col] = 'untracked'
+                dot_index -= 1
+
+    # Define colors for each bucket
+    unique_buckets = list(notice_buckets['bucket'])
+    print(unique_buckets)
+    colors_palette = [
+        '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+        '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+    ]
+    color_map = {bucket: colors_palette[i % len(colors_palette)] for i, bucket in enumerate(unique_buckets)}
+    color_map['untracked'] = '#cccccc'  # Grey for untracked
+
+    # Extract x, y, color, and hover text for scatter plot
+    x_coords = []
+    y_coords = []
+    colors = []
+    hover_texts = []
+
+    for row in range(num_rows):
+        for col in range(bar_width):
+            if grid[row, col] is not None:
+                x_coords.append(col)
+                y_coords.append(row)
+                bucket = grid[row, col]
+                colors.append(color_map[bucket])
+                if bucket == 'untracked':
+                    hover_texts.append('No deleted reviews')
+                else:
+                    hover_texts.append(f'{bucket} deleted reviews')
+
+    # Create scatter plot
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=x_coords,
+        y=y_coords,
+        mode='markers',
+        marker=dict(
+            size=10,
+            color=colors,
+            line=dict(width=1, color='white')
+        ),
+        text=hover_texts,
+        hovertemplate='<b>%{text}</b><extra></extra>',
+        showlegend=False
+    ))
+
+    # Update layout
+    fig.update_layout(
+        title=f'Distribution of {total_number_of_restaurants} Restaurants by tracked Deleted Reviews.',
+        xaxis=dict(
+            range=[-0.5, bar_width - 0.5],
+            showgrid=False,
+            zeroline=False,
+            showticklabels=False
+        ),
+        yaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            showticklabels=False,
+            autorange='reversed'
+        ),
+        plot_bgcolor='white',
+        hovermode='closest',
+        width=400,
+        height=150 + (num_rows * 30)
+    )
+
+
+    # Create custom legend
+    legend_traces = []
+    for bucket_name in unique_buckets:
+        count = notice_buckets.loc[notice_buckets['bucket'] == bucket_name, 'count'].values[0]
+        legend_traces.append(
+            go.Scatter(
+                x=[None], y=[None],
+                mode='markers',
+                marker=dict(size=10, color=color_map[bucket_name], line=dict(width=1, color='white')),
+                name=f'{bucket_name.split('reviews')[0]} ({count})',
+                showlegend=True
+            )
+        )
+
+    # Add grey dot for untracked
+    untracked_count = total_number_of_restaurants - notice_buckets['count'].sum()
+    legend_traces.append(
+        go.Scatter(
+            x=[None], y=[None],
+            mode='markers',
+            marker=dict(size=10, color='#cccccc', line=dict(width=1, color='white')),
+            name=f'No Deletions ({untracked_count})',
+            showlegend=True
+        )
+    )
+
+    # Add legend traces to figure
+    for trace in legend_traces:
+        fig.add_trace(trace)
+
+    fig.write_html(GENERAL_PNG_PATH / 'gridplot-tracked-deletions.html')
 
 
 df = pd.read_csv(CSV_PATH)
@@ -177,9 +468,17 @@ for col in star_cols:
         print(df[col])
         
         
+# get the restaurants with changements
+min_values, max_values = find_anomalies(df, threshold=1)
+restaurants = pd.concat([min_values, max_values], ignore_index=True)
+restaurants = restaurants['name'].unique()
+plot_data(df, restaurants)
 
-# min_values, max_values = find_anomalies(df, threshold=1)
-# restaurants = pd.concat([min_values, max_values], ignore_index=True)
-# restaurants = restaurants['name'].unique()
-# plot_data(df, restaurants)
+
+deletion_restaurants, _ = find_anomalies(df, threshold=0)
+check_for_note(df, deletion_restaurants)
+make_gridplot_tracked_deletions(df, deletion_restaurants)
+
+
+# make sankey plot
 make_sankey_plot(df)
