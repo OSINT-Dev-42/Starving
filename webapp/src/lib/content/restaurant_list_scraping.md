@@ -1,6 +1,12 @@
-TODO describe the way we scraped the restaurant list
 
 ## Restaurant List Scraping
 
 Similar to the main scraping, we used the tor network to obfuscate our routing to not get detected by google maps. Contrary to the main scraping of reviews, for us it was not necessary to automate the scraping task, since we only needed to aquire a list of restaurants once for our proof-of-concept approach.
-TODO be more specific and write more content for our amazing webpage
+
+
+The script for scraping the restaurant list accesses the google maps website, searches for "Restaurant Bochum" end returns a list of all entries in the "Results" list from google maps. The scraper scrolls through the "Results" list and saves the entries that it has not seen yet. The scraper either returns a given number of entries or all of the results for the search, depending on if the list ends before the number of queried results is reached. To detect if the end of the list has been reached, the scraper checks for the text in the website "You have reached the end of the" which appears when the end of the list has been reached. In experiments the word "list" was sometimes not displayed properly so the check ommits this word and only checks for the indicated phrase.
+
+
+In order to compensate for slow traffic through the tor network, the scraper uses delays during its search to provide enough loading time. This loading time is given generously, since the runtime for the scraper does not need to be short. Another benefit of longer sleep-times is, that the detection by google maps for automated scraping is made harder.
+
+The list of results, for our project the list of restaurants, is written to a csv file and stored in the github repository. The list contains the name and address of the restaurants, which are obtained by extracting them from the restaurant information provided by google maps. The extraction is made up of splitting the information string at words that occur at the same place giving the information a predictable structure. For some restaurants the field for the address is left empty. To address this the scraper adds the string "Bochum" to every address of the restaurant list. This can be done because a very limited area is being queried. If restaurants from other areas were to be used, then this would not be possible. For this case it might be beneficial to leave the address field empty and/or to delete the entry from the restaurant list. Further experiments in order to find out how many restaurants would be affected on average have not been made since it is not a concern for this project and thus out of scope. 
