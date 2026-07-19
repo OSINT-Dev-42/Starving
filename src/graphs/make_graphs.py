@@ -50,7 +50,7 @@ def find_anomalies(df, threshold):
     max_values = max_values[max_values['max_value'] > threshold]
     
     min_values = pd.DataFrame(list(minimum_dict.items()), columns=['name', 'min_value'])
-    min_values = min_values[min_values['min_value'] < -threshold]
+    min_values = min_values[min_values['min_value'] < 0]
     min_values = min_values.sort_values('min_value')
     return min_values, max_values
 
