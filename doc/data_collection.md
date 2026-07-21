@@ -31,7 +31,7 @@
     - we keep the same ip address only for a fixed interval to prevent bot detection as well -->
 
 ## Intro
-We start of with discussing our data collection procedure. If we search the web, we will find various ways to access review data from [Google Maps](https://www.google.com/maps?hl=en). For example, there are various providers that offer web scraping as a service like [OpenWeb Ninja](https://www.openwebninja.com/api/google-maps-reviews) or [Outscraper](https://outscraper.com/google-maps-reviews-api/). Google itself also offers a solution in the form of the [Google Maps API](https://outscraper.com/google-maps-reviews-api/).  
+We start of with discussing our data collection procedure. If we search the web, we will find various ways to access review data from [Google Maps](https://www.google.com/maps?hl=en). For example, there are various providers that offer web scraping as a service like [OpenWeb Ninja](https://www.openwebninja.com/api/google-maps-reviews) or [Outscraper](https://outscraper.com/google-maps-reviews-api/). Google itself also offers a solution in the form of the [Google Maps API](https://mapsplatform.google.com/lp/maps-apis/ ).  
 
 However, none of the solutions really meet our requirements. There are two main points to consider. Firstly, the free tiers would exhaust over our scraping duration. Secondly, we want to look at the reviews in a more granular manner, which is often not supported by the available APIs. In most cases, only the total number of reviews and the average rating are displayed. For this reason, and because [Google Maps](https://www.google.com/maps?hl=en) has an easy-to-use interface, we built our own web scraper to collect our data.  
 
