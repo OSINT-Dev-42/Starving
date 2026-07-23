@@ -107,11 +107,11 @@ def plot_data(df, restaurants):
             print(f"The restaurant named {restaurant} was dropped, because only {len(df[df['name'] == restaurant])} entries are saved.")
             continue
         # get the measurements for this restaurant in its own dataframe
-        r_df = df[df['name'] == restaurant]
+        r_df = df.loc[df['name'] == restaurant].copy()
         star_cols = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
         
-        r_df.loc[:, 'date'] = pd.to_datetime(r_df['date'], format='mixed')
-        #r_df['date'] = pd.to_datetime(r_df['date'], format='mixed')
+        # r_df.loc[:, 'date'] = pd.to_datetime(r_df['date'], format='mixed')
+        r_df['date'] = pd.to_datetime(r_df['date'], format='mixed')
         # Sort by date (critical for line graphs!)
         r_df = r_df.sort_values('date')
         
@@ -164,7 +164,7 @@ def make_sankey_plot(df):
     delete_10_19 = len(min_values[(min_values['min_value'] <= -10) & (min_values['min_value'] > -20)])
     delete_20_49 = len(min_values[(min_values['min_value'] <= -20) & (min_values['min_value'] > -50)])
     delete_over_50 = len(min_values[(min_values['min_value'] <= -50)])
-    print(number_with_additions, add_1, add_2_4, add_5_9, add_10_14, add_15_19, add_over_20) 
+    # print(number_with_additions, add_1, add_2_4, add_5_9, add_10_14, add_15_19, add_over_20) 
     fig = go.Figure(data=[go.Sankey(
         node = dict(
           thickness = 5,
@@ -197,8 +197,8 @@ def make_sankey_plot(df):
           target = [1, 2, 3, 4, 5, 6, 7, 8],
           value = [number_with_deletions, total_restaurants - number_with_deletions, delete_1, delete_2_4, delete_5_9, delete_10_19, delete_20_49, delete_over_50]
       ))])
-    print(min_values)
-    print(total_restaurants, number_with_deletions, delete_1)
+    # print(min_values)
+    # print(total_restaurants, number_with_deletions, delete_1)
     fig.write_html(GENERAL_PNG_PATH / 'restaurants_with_deletions.html')
     
     
@@ -232,7 +232,11 @@ def check_for_note(df, deletion_restaurants):
 
     # Top rows: colored dots (one bucket at a time, left to right, top to bottom)
     for bucket_name in notice_buckets.index:
-        bucket_count = notice_buckets[bucket_name]
+        try: # to convert the bucket count to integer, might raise NaN error 
+            bucket_count = int(notice_buckets[bucket_name])
+        except ValueError as e:
+            print(f"ValueError: {e} in value: {bucket_name}; setting to 0")
+            bucket_count = 0
         for i in range(bucket_count):
             if dot_index > 0:
                 row = num_rows - 1 - (dot_index // bar_width)
@@ -368,7 +372,7 @@ def make_gridplot_tracked_deletions(df, min_values):
         'count': [delete_101_150, delete_51_100, delete_21_50, delete_11_20, delete_6_10, delete_2_5, delete_1]
         })
     
-    print(notice_buckets)
+    # print(notice_buckets)
     # Bar width in dots
     bar_width = 10
 
@@ -383,7 +387,7 @@ def make_gridplot_tracked_deletions(df, min_values):
 
     # Top rows: colored dots (one bucket at a time, left to right, top to bottom)
     for bucket_name in notice_buckets['bucket']:
-        print(bucket_name)
+        # print(bucket_name)
         bucket_count = notice_buckets.loc[notice_buckets['bucket'] == bucket_name, 'count'].values[0]
         for i in range(bucket_count):
             if dot_index > 0:
@@ -401,7 +405,7 @@ def make_gridplot_tracked_deletions(df, min_values):
 
     # Define colors for each bucket
     unique_buckets = list(notice_buckets['bucket'])
-    print(unique_buckets)
+    # print(unique_buckets)
     colors_palette = [
         '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
         '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
@@ -514,8 +518,8 @@ for col in star_cols:
         
 ## get the restaurants with changements
 min_values, max_values = find_anomalies(df, threshold=1)
-print(f"len(max_values) {len(max_values)}, len(min_values): {len(min_values)}")
-print(min_values)
+# print(f"len(max_values) {len(max_values)}, len(min_values): {len(min_values)}")
+# print(min_values)
 restaurants = pd.concat([min_values, max_values], ignore_index=True)
 restaurants = restaurants['name'].unique()
 plot_data(df, restaurants)
