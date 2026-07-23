@@ -1,11 +1,23 @@
 # Analysis
 
-The analysis focusses on answering the research question, if there are patterns in the review data that can be detected. Nevertheless, we first give an overview of the data.
-TODO
+The analysis focusses on answering the research question, if there are patterns in the review data that can be detected.  
+The webscraper collects data three times a day and stores it in a csv file. To analyse this data we created a python script that is automatically run by github actions when there is new data pushed to the main branch of the repository. This means whenever the scraper adds data to the csv file, the analyzation script is being executed.
 
-The webscraper collects data three times a day and stores it in a csv file. To analyse this data we created a python script that is automatically run by github actions when there is new data pushed to the main branch of the repository. This means whenever the scraper adds data to the csv file the analysation script is being executed.
+This project focussed on restaurants in the city Bochum, which appear in the google maps search for the query "Restaurant Bochum". We collected data for 119 restaurants and focus on the maximum change of reviews in a single measurement. As the following sankey plot shows, 111 restaurants have new reviews and 8 restaurants did not get new reviews during the time of the experiment.  
+TODO input the plot Starving/data/graphs/general/restaurants_with_new_reviews.html
 
-The script mainly creates graphs of restaurants, which show the changement of stars over the collected time. Furthermore it only creates the graphs for restaurants that have changes that are of interest to a user.  
+The plot shows that 57 restaurants had a maximum of one new review from one measurement to the next. It is also not uncommon for restaurants to have 2-4 new reviews with 45 restaurants, but it is less common for restaurants to get more than 5 on a single measurement. Only 5 restaurants got 5-9 new reviews and 4 restaurants got 10-14 new reviews maximum in a single measurement.
+
+When we consider the deletions, we can look at two cases. For one, google maps now provides a notice, when a restaurant deleted reviews because of defamation. The second case is the deletions that were measured in this experiment. With measured deletions we focus on the total amount of deleted reviews in the time of our experiment.  
+A caveat with the measured deletions and new reviews is, that it can not be detected if inbetween measurements the same amount of reviews was deleted and added, thus only the total change at the time of the measurement can be tracked and visualized.  
+The following two plots show the distribution of restaurants that have a deletion notice by google maps and the distribution of restaurants with measured deletions. 
+TODO input the plot Starving/data/graphs/general/gridplot-notice-deletions.html
+TODO input the plot Starving/data/graphs/general/gridplot-tracked-deletions.html
+
+The plot with the distribution of restaurants with a deletion notice visualizes, that most restaurants do not have a notice. The note from google maps differentiates between amounts of deletions, for example it classifies from 2-5, 6-10 and so on. The class with the most deletions we observed in our dataset is 101-150 deletions. In later parts of this chapter we will specifically analyze this particular case.  
+The plot with the measured deletions also takes into account ther reviews that were deleted by users. Furthermore we could also track if only one review was deleted. Thus the plot shows, that only 52 out of the 119 restaurants did not have any deleted reviews. There were 31 restaurants with one deleted review and 29 restaurants with two to five deleted reviews. The second class is noticably more common than the notice shows, which suggests that users activvely deleted their reviews. 
+
+The script, apart from the graphs shown before, mainly creates graphs of restaurants, which show the changement of stars over the collected time. Furthermore it only creates the graphs for restaurants that have changes that are of interest to a user.  
 Changes of interest are defined as two cases. For one any deletions of reviews. The second case is, when a detected increase of reviews from one data collection to the next (the delta), is higher than the defined threshold of 4. Thus, only restaurants with a maximum delta of 5 or higher are selected as interesting.  
 This threshold is chosen, because experiments with the restaurants in Bochum show, that of the 119 restaurants there are 58 that have a maximum delta of 1, and a further 44 restaurants with a maximum delta of 2-4. Only 9 restaurants have a delta of 5 and higher. These are seen as interesting, because it might indicate the use of bots to increase the rating of the restaurant if these increases to not fit into the ongoing increase of reviews.
 
@@ -49,6 +61,9 @@ TODO input the plot Starving/data/graphs/interesting_differences/Fiege's Stammha
 
 This deletion of reviews has changed the average from 4.49 to 4.64 stars by deleting 9% of its reviews. Between the 28th of May and the 15th of July the restaurant no new reviews for 1 and 2 stars, 1 new 3-star review, 2 new 4-star reviews and 9 new 5-star reviews. At the end of our measureements the restaurant has 774 5-star reviews, 415 4-star reviews, 6 3-star reviews and no 2-star and 1-star reviews.  
 Since it is not known what the content of the deleted reviews was, it is not possible to ethically judge if the deletions were justified. Thus the presumption of innocence still holds and it is up to an enduser to make their own conclusion.
+
+To conclude the analysis, we showed different restaurants that show anomalies for the increase and deletion of reviews. It is not possible to clearly label any of the cases as foul-play, thus it is up to an end-user to draw their own conclusions and this project provides a tool to help in the endeavour of finding a suitible restaurant to eat.  
+We also raise the point that with a longer time it might be possible to recognize patterns that are not apparent within a timespan of about 2 months.
 
 
 
