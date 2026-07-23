@@ -24,6 +24,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Delete old generated graphs
+      run: |
+        rm -f data/graphs/interesting_differences/*.html
+        rm -f data/graphs/interesting_total_count/*.html
+        rm -f data/graphs/general/*.html
     - name: Make Graphs
       run: python src/graphs/make_graphs.py
     - name: Commit and push generated files      
