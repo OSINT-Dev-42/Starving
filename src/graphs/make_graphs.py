@@ -198,8 +198,11 @@ def plot_data(df, restaurants):
         fig = px.line(r_df_long, x='date', y='Count', color='Star Rating',
             title=f'{restaurant} - Total Count of Ratings',
             labels={'date': 'Date', 'Count': 'Number of reviews'},
-            height=600, width=1000)
-        fig.write_html(TOTAL_COUNT_PNG_PATH / (restaurant.replace('/', '-') + '.html'))
+            height=600)
+        fig.update_layout(autosize=True, margin=dict(l=60, r=30, t=60, b=60))
+        fig.write_html(TOTAL_COUNT_PNG_PATH / (restaurant.replace('/', '-') + '.html'),
+            include_plotlyjs='cdn', default_width='100%',
+            config={'responsive': True})
         
         # also plot the differences
         r_diff_df = r_df
@@ -216,8 +219,11 @@ def plot_data(df, restaurants):
         fig = px.line(r_df_long, x='date', y='Count', color='Star Rating',
             title=f'{restaurant} - Changement of Reviews',
             labels={'date': 'Date', 'Count': 'Number of added or deleted stars'},
-            height=600, width=1000)
-        fig.write_html(DIFF_PNG_PATH / (restaurant.replace('/', '-') + '.html'))
+            height=600)
+        fig.update_layout(autosize=True, margin=dict(l=60, r=30, t=60, b=60))
+        fig.write_html(DIFF_PNG_PATH / (restaurant.replace('/', '-') + '.html'),
+            include_plotlyjs='cdn', default_width='100%',
+            config={'responsive': True})
 
 
 
@@ -255,7 +261,7 @@ def make_sankey_plot(df):
           value = [number_with_additions, total_restaurants - number_with_additions, add_1, add_2_4, add_5_9, add_10_14]
       ))])
 
-    fig.write_html(GENERAL_PNG_PATH / 'restaurants_with_new_reviews.html')
+    fig.write_html(GENERAL_PNG_PATH / 'restaurants_with_new_reviews.html', include_plotlyjs='cdn')
     
 
     fig = go.Figure(data=[go.Sankey(
@@ -274,7 +280,7 @@ def make_sankey_plot(df):
       ))])
     # print(min_values)
     # print(total_restaurants, number_with_deletions, delete_1)
-    fig.write_html(GENERAL_PNG_PATH / 'restaurants_with_deletions.html')
+    fig.write_html(GENERAL_PNG_PATH / 'restaurants_with_deletions.html', include_plotlyjs='cdn')
     
     
     
@@ -425,7 +431,7 @@ def check_for_note(df, deletion_restaurants):
     for trace in legend_traces:
         fig.add_trace(trace)
 
-    fig.write_html(GENERAL_PNG_PATH / 'gridplot-notice-deletions.html')
+    fig.write_html(GENERAL_PNG_PATH / 'gridplot-notice-deletions.html', include_plotlyjs='cdn')
 
 
 def make_gridplot_tracked_deletions(df, min_values):
@@ -578,7 +584,7 @@ def make_gridplot_tracked_deletions(df, min_values):
     for trace in legend_traces:
         fig.add_trace(trace)
 
-    fig.write_html(GENERAL_PNG_PATH / 'gridplot-tracked-deletions.html')
+    fig.write_html(GENERAL_PNG_PATH / 'gridplot-tracked-deletions.html', include_plotlyjs='cdn')
 
 
 df = pd.read_csv(CSV_PATH)

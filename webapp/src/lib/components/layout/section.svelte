@@ -1,15 +1,15 @@
 <script lang="ts">
-	import type { Snippet } from "svelte";
+	import type { Snippet } from 'svelte';
 
-    type Props = {
-      title: string;
-      children: Snippet;
-    }
+	type Props = {
+		title: string;
+		children: Snippet;
+	};
 
-    const { title, children }: Props = $props();
+	const { title, children }: Props = $props();
 </script>
 
-<section class="flex flex-col gap-4 mb-8">
-    <h1 class="text-4xl font-black">{title}</h1>
-    {@render children()}
+<section class="mb-8 flex flex-col gap-4 p-4">
+	<h1 class="text-4xl font-black">{title}</h1>
+	{@render children()}
 </section>

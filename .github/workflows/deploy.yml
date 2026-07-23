@@ -29,6 +29,11 @@ jobs:
         run: |
           npm i
 
+      - name: Copy generated graphs into webapp static
+        run: |
+          mkdir -p webapp/static/doc/graphs
+          cp -R data/graphs/. webapp/static/doc/graphs/
+
       - name: build
         working-directory: webapp
         env:

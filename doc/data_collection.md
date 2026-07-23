@@ -73,6 +73,12 @@ We insert a random delay into every action to mimic user input. Additionally, we
 
 ![Steps performed by the web scraper](/doc/figures/BlockDiagram.svg)
 
+The following clip shows an annotated run of the web scraper collecting reviews for a single restaurant:
+
+<video controls muted playsinline width="100%" src="/doc/video/example_with_annot.mp4">
+    Error	
+</video>
+
 ## Error Handling
 Every action performed by [Playwright](https://playwright.dev/python/docs/api/class-playwright) takes place within a try block to prevent crashes. In most cases, a blocked IP address by Google is the culprit. Therefore, if we cannot visit Google Maps, we rotate our IP address independently from our fixed interval.  
 If this does not suffice we repeat this process 15 times in the event of other anomalies. As a last resort, we skip the current restaurant for the current run and continue with the next restaurant.

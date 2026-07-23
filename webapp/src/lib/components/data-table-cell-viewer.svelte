@@ -85,7 +85,7 @@
 								motion: "tween",
 							},
 							xAxis: {
-								format: (v) => v.toLocaleDateString("en-US", { month: "short" }),
+								format: (v) => v.toLocaleDateString("de-DE", { month: "short" }),
 							},
 							yAxis: { ticks: [0, 300, 600] },
 						}}
@@ -93,7 +93,7 @@
 						{#snippet tooltip()}
 							<Chart.Tooltip
 								labelFormatter={(v: Date) => {
-									return v.toLocaleDateString("en-US", {
+									return v.toLocaleDateString("de-DE", {
 										month: "long",
 									});
 								}}

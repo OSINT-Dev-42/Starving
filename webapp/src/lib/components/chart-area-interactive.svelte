@@ -198,7 +198,7 @@
 					xAxis: {
 						ticks: timeRange === "7d" ? 7 : undefined,
 						format: (v) => {
-							return v.toLocaleDateString("en-US", {
+							return v.toLocaleDateString("de-DE", {
 								month: "short",
 								day: "numeric",
 							});
@@ -245,7 +245,7 @@
 				{#snippet tooltip()}
 					<Chart.Tooltip
 						labelFormatter={(v: Date) => {
-							return v.toLocaleDateString("en-US", {
+							return v.toLocaleDateString("de-DE", {
 								month: "short",
 								day: "numeric",
 							});

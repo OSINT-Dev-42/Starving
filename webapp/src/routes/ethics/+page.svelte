@@ -6,6 +6,6 @@
 	const content = marked.parse(rawContent);
 </script>
 
-<article class="prose lg:prose-xl">
+<article class="prose p-4">
 	{@html content}
 </article>

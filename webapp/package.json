@@ -4,6 +4,7 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"copy:graphs": "mkdir -p static/doc/graphs && cp -R ../data/graphs/. static/doc/graphs/",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -55,6 +56,7 @@
 		"zod": "^4.4.3"
 	},
 	"dependencies": {
+		"@fontsource/archivo-black": "^5.3.0",
 		"date-fns": "^4.4.0",
 		"lodash": "^4.18.1",
 		"marked": "^18.0.6",

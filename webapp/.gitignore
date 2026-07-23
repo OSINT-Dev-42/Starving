@@ -12,6 +12,9 @@ node_modules
 .DS_Store
 Thumbs.db
 
+# Graphs copied from ../data/graphs at build time (CI) or via `npm run copy:graphs`
+/static/doc/graphs/
+
 # Env
 .env
 .env.*

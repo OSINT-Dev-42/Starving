@@ -31,12 +31,17 @@ jobs:
         rm -f data/graphs/general/*.html
     - name: Make Graphs
       run: python src/graphs/make_graphs.py
-    - name: Commit and push generated files      
-      run: |        
+    - name: Make summary
+      run: python src/graphs/make_summary.py
+    - name: Commit and push generated files
+      run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add data/graphs/interesting_differences/*.html
         git add data/graphs/interesting_total_count/*.html
         git add data/graphs/general/*.html
+        git add webapp/src/lib/data/summary.json
+        git add webapp/src/lib/data/restaurants.json
+        git add webapp/src/lib/data/restaurant-details.json
         git commit -m "Update generated graphs" || echo "No changes to commit"
         git push origin HEAD:main
