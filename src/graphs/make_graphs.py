@@ -13,15 +13,75 @@ DIFF_PNG_PATH = PATH / 'data' / 'graphs' / 'interesting_differences'
 GENERAL_PNG_PATH = PATH / 'data' / 'graphs' / 'general'
 
 
+def clean_dataset(df):
+    """
+    Cleans the dataset from the scraping error where the amount of reviews drops to the number of stars. 
+    """
+    all_unique_restaurants = df['name'].unique()
+    star_cols = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
+    for restaurant in all_unique_restaurants:
+        restaurant_df = df[df['name'] == restaurant]
+        if len(restaurant_df) < 3:
+            continue
+        for col in star_cols:
+            diff = restaurant_df[col].diff()            
+            try:
+                maximum_changement = int(diff.max())
+                max_idx = int(diff.idxmax())
+                minimum_changement = int(diff.min())
+                min_idx = int(diff.idxmin())
+                
+            except ValueError:
+                print(f"diff error case: {restaurant} {diff}")
+            i = 1
+            star = int(col.split(' ')[0])
+            min_value = restaurant_df[col].loc[min_idx]
+            # if the minimum value is the star value, then look for scraping error pattern
+            position = restaurant_df.index.get_loc(min_idx)
+            prev_position = restaurant_df.index[position-1]
+            prev_value = restaurant_df[col].loc[prev_position]
+            try:
+                next_position = restaurant_df.index[position +1]            
+                next_value = restaurant_df[col].loc[next_position]
+            except:
+                # print(f"Error occured, end of list? {restaurant}\n{restaurant_df}")
+                next_value = prev_value
+            while minimum_changement < 0 and min_value == star and (prev_value != star and next_value != star):
+                # correct the detected anomaly in the df
+                # print(df.loc[min_idx, col])
+                df.loc[min_idx, col] = prev_value
+
+                min_idx = diff.nsmallest(i+1).index[i]
+                i += 1
+                position = restaurant_df.index.get_loc(min_idx)
+                min_value = restaurant_df[col].loc[min_idx]
+                prev_position = restaurant_df.index[position-1]
+                prev_value = restaurant_df[col].loc[prev_position]
+                try:
+                    next_position = restaurant_df.index[position +1]
+                    next_value = restaurant_df[col].loc[next_position]
+                except:
+                    # print(f"Error occured, end of list? {restaurant}")
+                    next_value = prev_value
+    return df
+                
+                
+                
+                
+                
+
 def find_anomalies(df, threshold):
     # get a list of restaurants in the dataframe by unique name
 
     all_unique_restaurants = df['name'].unique()
     maximum_dict = dict()
     minimum_dict = dict()
+    total_deletions_dict = dict()
 
     star_cols = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
     for restaurant in all_unique_restaurants:
+        # if restaurant != "YUMINI, Bochum Viktoriastraße 43-45":
+        #     continue
         restaurant_df = df[df['name'] == restaurant]
         # print(restaurant_df)
         # skip if this restaurant has less than 3 entries
@@ -29,8 +89,13 @@ def find_anomalies(df, threshold):
             continue
         maximum_dict[restaurant] = 0
         minimum_dict[restaurant] = 0
+        # total_deletions_dict[restaurant] = 0
         for col in star_cols:
             diff = restaurant_df[col].diff()
+            # update the total number of deletions for this restaurant
+            deletions_sum = int(diff[diff < 0].sum())
+
+            total_deletions_dict[restaurant] = total_deletions_dict.get(restaurant,0) + deletions_sum
             
             try:
                 maximum_changement = int(diff.max())
@@ -53,7 +118,11 @@ def find_anomalies(df, threshold):
             except:
                 # print(f"Error occured, end of list? {restaurant}\n{restaurant_df}")
                 next_value = prev_value
-            while minimum_changement < 0 and min_value == star and (prev_value != star or next_value != star):                    
+            while minimum_changement < 0 and min_value == star and (prev_value != star and next_value != star):
+                print(restaurant)
+
+
+                # print("scraping error detected")
                 # while we have this pattern get the next
                 # get next highest and lowest 
                 maximum_changement = diff.nlargest(i+1).iloc[i]
@@ -73,6 +142,7 @@ def find_anomalies(df, threshold):
 
                 i += 1
                 position = restaurant_df.index.get_loc(min_idx)
+                min_value = restaurant_df[col].loc[min_idx]
                 prev_position = restaurant_df.index[position-1]
                 prev_value = restaurant_df[col].loc[prev_position]
                 try:
@@ -82,7 +152,9 @@ def find_anomalies(df, threshold):
                     # print(f"Error occured, end of list? {restaurant}")
                     next_value = prev_value
                     
-                    
+
+
+            
             # save the maximum and minimum change for all cols
             if maximum_dict[restaurant] < maximum_changement:
                 maximum_dict[restaurant] = maximum_changement
@@ -96,7 +168,10 @@ def find_anomalies(df, threshold):
     min_values = pd.DataFrame(list(minimum_dict.items()), columns=['name', 'min_value'])
     min_values = min_values[min_values['min_value'] < 0]
     min_values = min_values.sort_values('min_value')
-    return min_values, max_values
+    total_deletions = pd.DataFrame(list(total_deletions_dict.items()), columns=['name', 'min_value'])
+    total_deletions = total_deletions[total_deletions['min_value'] < 0]
+    total_deletions = total_deletions.sort_values('min_value')
+    return min_values, max_values, total_deletions
 
 def plot_data(df, restaurants):
     # get a list of restaurants in the dataframe by unique name
@@ -122,7 +197,7 @@ def plot_data(df, restaurants):
                     value_name='Count')
         fig = px.line(r_df_long, x='date', y='Count', color='Star Rating',
             title=f'{restaurant} - Total Count of Ratings',
-            labels={'date': 'Date', 'Count': 'Number of stars'},
+            labels={'date': 'Date', 'Count': 'Number of reviews'},
             height=600, width=1000)
         fig.write_html(TOTAL_COUNT_PNG_PATH / (restaurant.replace('/', '-') + '.html'))
         
@@ -147,10 +222,10 @@ def plot_data(df, restaurants):
 
 
 def make_sankey_plot(df):
-    min_values, max_values = find_anomalies(df, threshold=0)
+    min_values, max_values, deletion_restaurants = find_anomalies(df, threshold=0)
     total_restaurants = len(df['name'].unique())
     number_with_deletions = len(min_values)
-    number_with_additions = len(max_values) - 1
+    number_with_additions = len(max_values)
     add_1 = len(max_values[max_values['max_value'] < 2])
     add_2_4 = len(max_values[(max_values['max_value'] >= 2) & (max_values['max_value'] < 5)])
     add_5_9 = len(max_values[(max_values['max_value'] >= 5) & (max_values['max_value'] < 10)])
@@ -297,7 +372,10 @@ def check_for_note(df, deletion_restaurants):
 
     # Update layout
     fig.update_layout(
-        title=f'Distribution of {total_number_of_restaurants} Restaurants by Deleted Reviews given by notice.',
+        title=dict(text=f'Distribution of {total_number_of_restaurants} Restaurants <br>by Deleted Reviews given by notice.',
+        
+        ),
+        #title_text=None,
         xaxis=dict(
             range=[-0.5, bar_width - 0.5],
             showgrid=False,
@@ -450,7 +528,7 @@ def make_gridplot_tracked_deletions(df, min_values):
 
     # Update layout
     fig.update_layout(
-        title=f'Distribution of {total_number_of_restaurants} Restaurants by tracked Deleted Reviews.',
+        title=f'Distribution of {total_number_of_restaurants} Restaurants <br>by tracked Deleted Reviews.',
         xaxis=dict(
             range=[-0.5, bar_width - 0.5],
             showgrid=False,
@@ -516,19 +594,24 @@ for col in star_cols:
         print(df[col])
         
         
+# clean the dataset from the scraping error
+cleaned_df = clean_dataset(df)
 ## get the restaurants with changements
-min_values, max_values = find_anomalies(df, threshold=1)
-# print(f"len(max_values) {len(max_values)}, len(min_values): {len(min_values)}")
-# print(min_values)
+min_values, max_values, total_deletions = find_anomalies(df, threshold=1)
+#print(f"len(max_values) {len(max_values)}, len(min_values): {len(min_values)}")
+#print(total_deletions)
+
 restaurants = pd.concat([min_values, max_values], ignore_index=True)
 restaurants = restaurants['name'].unique()
-plot_data(df, restaurants)
+plot_data(cleaned_df, restaurants)
 
 
-deletion_restaurants, _ = find_anomalies(df, threshold=0)
-check_for_note(df, deletion_restaurants)
-make_gridplot_tracked_deletions(df, deletion_restaurants)
+_, _, deletion_restaurants = find_anomalies(df, threshold=0)
+
+check_for_note(cleaned_df, deletion_restaurants)
+make_gridplot_tracked_deletions(cleaned_df, deletion_restaurants)
 
 
 # make sankey plot
-make_sankey_plot(df)
+make_sankey_plot(cleaned_df)
+
