@@ -23,6 +23,10 @@ def find_anomalies(df, threshold):
     star_cols = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
     for restaurant in all_unique_restaurants:
         restaurant_df = df[df['name'] == restaurant]
+        # print(restaurant_df)
+        # skip if this restaurant has less than 3 entries
+        if len(restaurant_df) < 3:
+            continue
         maximum_dict[restaurant] = 0
         minimum_dict[restaurant] = 0
         for col in star_cols:
@@ -30,24 +34,64 @@ def find_anomalies(df, threshold):
             
             try:
                 maximum_changement = int(diff.max())
+                max_idx = int(diff.idxmax())
                 minimum_changement = int(diff.min())
+                min_idx = int(diff.idxmin())
+                
             except ValueError:
                 print(f"diff error case: {restaurant} {diff}")
             i = 1
-            while maximum_changement > 0 and maximum_changement == abs(minimum_changement):
+            star = int(col.split(' ')[0])
+            min_value = restaurant_df[col].loc[min_idx]
+            # if the minimum value is the star value, then look for scraping error pattern
+            position = restaurant_df.index.get_loc(min_idx)
+            prev_position = restaurant_df.index[position-1]
+            prev_value = restaurant_df[col].loc[prev_position]
+            try:
+                next_position = restaurant_df.index[position +1]            
+                next_value = restaurant_df[col].loc[next_position]
+            except:
+                # print(f"Error occured, end of list? {restaurant}\n{restaurant_df}")
+                next_value = prev_value
+            while minimum_changement < 0 and min_value == star and (prev_value != star or next_value != star):                    
+                # while we have this pattern get the next
                 # get next highest and lowest 
-                maximum_changement = int(diff.nlargest(i+1).iloc[i])
-                minimum_changement = int(diff.nsmallest(i+1).iloc[i])
+                maximum_changement = diff.nlargest(i+1).iloc[i]
+                # print(maximum_changement)
+                if pd.isna(maximum_changement):
+                    maximum_changement = 0
+                else:    
+                    maximum_changement = int(maximum_changement)
+                    
+                minimum_changement = diff.nsmallest(i+1).iloc[i]
+                min_idx = diff.nsmallest(i+1).index[i]
+                # print(minimum_changement)
+                if pd.isna(minimum_changement):
+                    minimum_changement = 0
+                else:    
+                    minimum_changement = int(minimum_changement)
+
                 i += 1
-                
-            if maximum_dict[restaurant] < maximum_changement and maximum_changement != abs(minimum_changement):
+                position = restaurant_df.index.get_loc(min_idx)
+                prev_position = restaurant_df.index[position-1]
+                prev_value = restaurant_df[col].loc[prev_position]
+                try:
+                    next_position = restaurant_df.index[position +1]
+                    next_value = restaurant_df[col].loc[next_position]
+                except:
+                    # print(f"Error occured, end of list? {restaurant}")
+                    next_value = prev_value
+                    
+                    
+            # save the maximum and minimum change for all cols
+            if maximum_dict[restaurant] < maximum_changement:
                 maximum_dict[restaurant] = maximum_changement
-            if minimum_dict[restaurant] > minimum_changement and maximum_changement != abs(minimum_changement):
+            if minimum_dict[restaurant] > minimum_changement:
                 minimum_dict[restaurant] = minimum_changement
 
     max_values = pd.DataFrame(list(maximum_dict.items()), columns=['name', 'max_value'])
     max_values = max_values.sort_values('max_value')
-    max_values = max_values[max_values['max_value'] > threshold]
+    max_values = max_values[max_values['max_value'] > threshold] # only save the restaurants over the given threshold
     
     min_values = pd.DataFrame(list(minimum_dict.items()), columns=['name', 'min_value'])
     min_values = min_values[min_values['min_value'] < 0]
@@ -66,8 +110,8 @@ def plot_data(df, restaurants):
         r_df = df[df['name'] == restaurant]
         star_cols = ['5 stars', '4 stars', '3 stars', '2 stars', '1 stars']
         
-        
-        r_df['date'] = pd.to_datetime(r_df['date'], format='mixed')
+        r_df.loc[:, 'date'] = pd.to_datetime(r_df['date'], format='mixed')
+        #r_df['date'] = pd.to_datetime(r_df['date'], format='mixed')
         # Sort by date (critical for line graphs!)
         r_df = r_df.sort_values('date')
         
@@ -468,8 +512,10 @@ for col in star_cols:
         print(df[col])
         
         
-# get the restaurants with changements
+## get the restaurants with changements
 min_values, max_values = find_anomalies(df, threshold=1)
+print(f"len(max_values) {len(max_values)}, len(min_values): {len(min_values)}")
+print(min_values)
 restaurants = pd.concat([min_values, max_values], ignore_index=True)
 restaurants = restaurants['name'].unique()
 plot_data(df, restaurants)
