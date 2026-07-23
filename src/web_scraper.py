@@ -16,6 +16,7 @@ RAW_PATH = PATH / "data" / "raw"
 
 LIST_PATH = PATH / "data" / "list"
 
+VIDEO_PATH = PATH / "doc" / "video"
 
 class WebCrawler:
     # ----------------constants ----------------
@@ -24,15 +25,22 @@ class WebCrawler:
 
     def __init__(self):
         """
-        Creates chromium ``browser`` with ``context`` and ``page`` tab.
+        Creates firefox ``browser`` with ``context`` and ``page`` tab.
         Note that browsers do not allow launching multiple instances with the same User Data Directory.\n
             - !simultaneous WebCrawler instances are not supported
         """
         # setup browser
         self.pw = sync_playwright().start()
-        self.browser = self.pw.firefox
-        self.context = self.browser.launch(
-            headless=True, proxy={"server": "socks5://127.0.0.1:9050"}
+        self.firefox = self.pw.firefox
+        self.browser = self.firefox.launch(
+            headless=True, proxy={"server": "socks5://127.0.0.1:9050"}   
+        )
+        self.context = self.browser.new_context(
+            # config for video recording
+            # record_video_dir=VIDEO_PATH,
+            # record_video_size={"width": 1920, "height": 1080},
+            # screen={"width":1920, "height":1080},
+            # viewport={"width":1920, "height":1080}
         )
         self.page = self.context.new_page()
 
@@ -220,6 +228,8 @@ if __name__ == "__main__":
                         break
                 else:
                     crawl.close()
+                    rotate_tor_ip() # rotate IP if an error occurs
+                    time.sleep(random.randrange(20, 50, 5) * 0.1)  # insert random delay
             except Exception as err:
                 print(f"Error: {err}")
                 crawl.close()
