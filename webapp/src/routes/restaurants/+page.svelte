@@ -4,7 +4,7 @@
 	import restaurants from '$lib/data/restaurants.json';
 </script>
 
-<svelte:head><title>All restaurants — Starving</title></svelte:head>
+<svelte:head><title>All Restaurants | Starving</title></svelte:head>
 
 <Section title="All restaurants">
 	<p>

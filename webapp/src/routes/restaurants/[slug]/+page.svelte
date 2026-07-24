@@ -32,7 +32,7 @@
 	];
 </script>
 
-<svelte:head><title>{restaurant.name}: Starving</title></svelte:head>
+<svelte:head><title>{restaurant.name} | Starving</title></svelte:head>
 
 <section class="mb-8 flex flex-col gap-4 p-4">
 	<Button href={resolve('/restaurants')} variant="outline" size="sm" class="self-start">

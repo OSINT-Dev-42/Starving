@@ -12,6 +12,8 @@
 	const bestRated = restaurants.slice(0, 20);
 </script>
 
+<svelte:head><title>Starving</title></svelte:head>
+
 <Hero />
 <Section title="How we did it">
 	<Card.Root class="mb-4 flex-row items-stretch gap-0 p-0">

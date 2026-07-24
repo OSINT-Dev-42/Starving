@@ -6,6 +6,8 @@
 	const content = marked.parse(rawContent);
 </script>
 
+<svelte:head><title>Ethics | Starving</title></svelte:head>
+
 <article class="prose p-4">
 	{@html content}
 </article>

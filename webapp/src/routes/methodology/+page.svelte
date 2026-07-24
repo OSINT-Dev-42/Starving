@@ -12,6 +12,8 @@
 	const listContent = resolveDocSrc(marked.parse(rawListContent) as string);
 </script>
 
+<svelte:head><title>Methodology | Starving</title></svelte:head>
+
 <article class="prose p-4">
 	{@html content}
 	{@html listContent}

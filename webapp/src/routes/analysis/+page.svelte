@@ -9,6 +9,8 @@
 	);
 </script>
 
+<svelte:head><title>Analysis | Starving</title></svelte:head>
+
 <article class="prose p-4">
 	{@html content}
 </article>
