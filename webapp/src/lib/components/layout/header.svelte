@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import icon from '$lib/assets/star-check.svg';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import * as NavigationMenu from '$lib/components/ui/navigation-menu/index.js';
@@ -8,9 +8,9 @@
 	import MenuIcon from '@lucide/svelte/icons/menu';
 
 	const links: { title: string; href: string }[] = [
-		{ title: 'Methodology', href: 'methodology' },
-		{ title: 'Analysis', href: 'analysis' },
-		{ title: 'Ethics', href: 'ethics' }
+		{ title: 'Methodology', href: resolve('/methodology') },
+		{ title: 'Analysis', href: resolve('/analysis') },
+		{ title: 'Ethics', href: resolve('/ethics') }
 	];
 
 	let mobileOpen = $state(false);
@@ -18,7 +18,7 @@
 
 <nav class="w-full border-b-2 border-border bg-secondary">
 	<div class="container mx-auto flex items-center justify-between px-4 py-4">
-		<a class="flex items-center gap-2" href="{base}/">
+		<a class="flex items-center gap-2" href={resolve('/')}>
 			<img src={icon} alt="Starving" class="h-8 w-8" />
 			<b class="text-4xl font-black">Starving</b>
 		</a>
@@ -30,7 +30,7 @@
 					<NavigationMenu.Item>
 						<NavigationMenu.Link>
 							{#snippet child()}
-								<a href="{base}/{link.href}" class={navigationMenuTriggerStyle()}>
+								<a href={link.href} class={navigationMenuTriggerStyle()}>
 									<b>{link.title}</b>
 								</a>
 							{/snippet}
@@ -53,7 +53,7 @@
 				<nav class="flex flex-col gap-1 px-4">
 					{#each links as link (link.href)}
 						<a
-							href="{base}/{link.href}"
+							href={link.href}
 							class="rounded-md px-3 py-2 text-lg font-bold transition-colors hover:bg-accent hover:text-accent-foreground"
 							onclick={() => (mobileOpen = false)}
 						>

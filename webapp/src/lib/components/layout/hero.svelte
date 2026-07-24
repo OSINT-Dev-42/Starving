@@ -7,7 +7,7 @@
 	import { Area, AreaChart } from 'layerchart';
 	import ArrowRight from '@tabler/icons-svelte/icons/arrow-right';
 	import summary from '$lib/data/summary.json';
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 
 	// featured restaurant series, with real Date objects for the time axis
 	const data = summary.featured.series.map((d) => ({ ...d, date: new Date(d.date) }));
@@ -24,16 +24,15 @@
 			Are there patterns in the changes of reviews in restaurants in Bochum?
 		</h1>
 		<p class="text-lg text-muted-foreground">
-			We tracked Google Maps ratings over time. Here is one real restaurant whose
-			negative reviews vanished overnight.
+			We tracked Google Maps ratings over time. See our analysis for our results.
 		</p>
-		<Button href="{base}/analysis" size="lg">See the analysis <ArrowRight /></Button>
+		<Button href={resolve('/analysis')} size="lg">To the analysis <ArrowRight /></Button>
 	</div>
 
 	<Card.Root>
 		<Card.Header>
 			<Card.Title>{summary.featured.name}</Card.Title>
-			<Card.Description>1★ and 2★ reviews over time</Card.Description>
+			<Card.Description>1 star and 2 star reviews over time</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<Chart.Container config={chartConfig} class="aspect-auto h-[240px] w-full">

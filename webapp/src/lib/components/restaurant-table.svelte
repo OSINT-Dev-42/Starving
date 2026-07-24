@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import Sparkline from '$lib/components/sparkline.svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
 
@@ -40,7 +40,7 @@
 				<Table.Row class="border-t-2 border-border">
 					<Table.Cell>
 						<a
-							href="{base}/restaurants/{restaurant.slug}"
+							href={resolve('/restaurants/[slug]', { slug: restaurant.slug })}
 							class="font-heading underline-offset-4 hover:underline"
 						>
 							{restaurant.name}

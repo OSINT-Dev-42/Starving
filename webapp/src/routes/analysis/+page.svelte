@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { asset } from '$app/paths';
 	import { marked } from 'marked';
 
 	const rawContent = (await import('$lib/content/analysis.md?raw')).default;
 	const content = (marked.parse(rawContent) as string).replaceAll(
-		'src="/doc/',
-		`src="${base}/doc/`
+		/src="(\/doc\/[^"]*)"/g,
+		(_, path) => `src="${asset(path)}"`
 	);
 </script>
 

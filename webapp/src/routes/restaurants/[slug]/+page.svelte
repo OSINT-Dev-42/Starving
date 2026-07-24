@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
+	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import * as Chart from '$lib/components/ui/chart/index.js';
@@ -35,7 +35,7 @@
 <svelte:head><title>{restaurant.name}: Starving</title></svelte:head>
 
 <section class="mb-8 flex flex-col gap-4 p-4">
-	<Button href="{base}/restaurants" variant="outline" size="sm" class="self-start">
+	<Button href={resolve('/restaurants')} variant="outline" size="sm" class="self-start">
 		<ArrowLeft /> All restaurants
 	</Button>
 
